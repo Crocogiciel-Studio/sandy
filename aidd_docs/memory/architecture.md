@@ -33,5 +33,6 @@ flowchart LR
 
 ## Gotchas
 
-- Docker livre sa propre interface `sbx` (macOS, Windows) : vérifier ce qu'elle fait avant de spécifier une fonctionnalité.
 - `sbx` n'exige plus Docker Desktop : l'onboarding détecte `sbx`, pas Docker Desktop.
+- Le workspace du projet est monté dans la sandbox au même chemin absolu : seuls les fichiers hors projet ont besoin de `sbx cp`.
+- Des éditeurs et apps se branchent sur une sandbox en SSH (`sbx setup ssh`) : c'est l'alternative de référence face à sandy (voir `aidd_docs/product/sandy.md`).

@@ -6,7 +6,7 @@ Vision technique et guide d'installation.
 
 Un ADE desktop « sandbox-first » qui rend le dev agentic sécurisé et accessible, en pilotant Docker Sandboxes (`sbx`) depuis une vraie interface graphique.
 
-sandy est une application desktop open source et cross-platform (macOS, Windows, Linux) destinée aux devs qui codent avec des agents IA (Claude Code, Codex, Gemini… tout ce que `sbx` sait lancer). Elle remplace les commandes `sbx` du quotidien par des gestes directs : glisser un fichier dans la session, ouvrir un port, autoriser un domaine. Elle offre aussi une vue d'ensemble des projets et des sessions. Ce qui la distingue, y compris de l'interface officielle de `sbx`, ce sont les agents en parallèle, le glisser-déposer intégré à la session et, en v2, l'aperçu annoté de l'app développée.
+sandy est une application desktop open source et cross-platform (macOS, Windows, Linux) destinée aux devs qui codent avec des agents IA (Claude Code, Codex, Gemini… tout ce que `sbx` sait lancer). Elle remplace les commandes `sbx` du quotidien par des gestes directs : glisser un fichier dans la session, ouvrir un port, autoriser un domaine. Elle offre aussi une vue d'ensemble des projets et des sessions. Ce qui la distingue, y compris des éditeurs branchés sur une sandbox en SSH, ce sont les agents en parallèle, le glisser-déposer intégré à la session et, en v2, l'aperçu annoté de l'app développée.
 
 Principes structurants :
 
@@ -131,4 +131,4 @@ Points de vigilance à reporter dans la conception :
 - `node-pty` dans un `utilityProcess`, des builds par architecture, et la `.node` exclue de l'asar (`asarUnpack`).
 - Glisser-déposer : `webUtils.getPathForFile()` depuis le preload, car `File.path` a été retiré dans Electron 32.
 - Inspecteur v2 : un seul client CDP à la fois. Les DevTools ne doivent pas s'ouvrir sur la vue d'aperçu.
-- Risque produit : Docker fournit désormais sa propre interface `sbx` sur macOS et Windows. Il faut l'évaluer avant de spécifier la v1, et l'onboarding doit détecter `sbx`, pas Docker Desktop.
+- Correction (2026-10-26) : l'audit affirmait que Docker fournit sa propre interface graphique `sbx`, ce qui est faux d'après les notes de version et la doc officielle. L'alternative réelle, ce sont les éditeurs et apps branchés en SSH (voir `aidd_docs/product/sandy.md`). L'onboarding doit détecter `sbx`, pas Docker Desktop.
