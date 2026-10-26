@@ -57,17 +57,16 @@ describe('pty-host', () => {
 
   it('resizes the pty', async () => {
     const host = startHost();
-    host.open(
-      'a',
-      'setInterval(() => {}, 1000); console.log("size:" + process.stdout.columns + "x" + process.stdout.rows); process.stdout.on("resize", () => { console.log("size:" + process.stdout.columns + "x" + process.stdout.rows); process.exit(0); })',
-    );
+    // Poll the size instead of waiting for a resize event: Windows ConPTY does not reliably emit it.
+    host.open('a', 'setInterval(() => console.log("size:" + process.stdout.columns + "x" + process.stdout.rows), 100)');
     await host.waitFor(() => (host.output().includes('size:80x24') ? true : undefined));
 
     host.send({ type: 'resize', id: 'a', cols: 120, rows: 40 });
 
-    expect(await host.exitCode('a')).toBe(0);
-    expect(host.output()).toContain('size:120x40');
-  });
+    await host.waitFor(() => (host.output().includes('size:120x40') ? true : undefined), 10000);
+    host.send({ type: 'close', id: 'a' });
+    await host.exitCode('a');
+  }, 20000);
 
   it('reports a non-zero exit code', async () => {
     const host = startHost();
