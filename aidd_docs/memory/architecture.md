@@ -34,5 +34,8 @@ flowchart LR
 ## Gotchas
 
 - `sbx` n'exige plus Docker Desktop : l'onboarding détecte `sbx`, pas Docker Desktop.
+- Aucune commande sandbox ne marche sans `sbx login` : la connexion Docker fait partie de l'onboarding.
+- `sbx` change vite, avec des breaking changes fréquents, et ses formats JSON ne sont pas documentés : l'adapter `sbx` fige ces formats par des tests de contrat, et sandy vérifie la version via `sbx version --json` au démarrage.
+- `create` et `cp` n'ont pas de `--json` : sandy fixe toujours `--name`, se fie au code de sortie, puis relit `sbx ls --json`. Pas de flux d'événements : les 403 se détectent en interrogeant `sbx policy log --json`. Détail : `aidd_docs/backlog/spikes/sbx-cli-drivability.md`.
 - Le workspace du projet est monté dans la sandbox au même chemin absolu : seuls les fichiers hors projet ont besoin de `sbx cp`.
 - Des éditeurs et apps se branchent sur une sandbox en SSH (`sbx setup ssh`) : c'est l'alternative de référence face à sandy (voir `aidd_docs/product/sandy.md`).

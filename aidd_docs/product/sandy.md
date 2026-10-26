@@ -33,7 +33,7 @@ Si chaque friction entre l'hôte et la sandbox se résout par un geste dans l'in
 | Les intégrations SSH ne couvrent pas les frictions (fichiers, ports, 403) | assumption, acceptée sans test | la doc T3 Code n'en parle pas ; revérifier si un ADE annonce un support de `sbx` |
 | Les fichiers du projet n'ont pas besoin de copie (workspace monté au même chemin) | evidence | doc `sbx` ; seuls les fichiers hors projet ont besoin de `sbx cp` |
 | `clipboard.imagePaste` ne résout pas le cas des screenshots | assumption | l'activer et refaire le test du collage |
-| sandy peut tout faire en pilotant la CLI `sbx` | assumption, critique | spike : sorties JSON, `cp`, `ports`, `policy`, `secret`, événements ou logs exploitables |
+| sandy peut tout faire en pilotant la CLI `sbx` | evidence | spike `aidd_docs/backlog/spikes/sbx-cli-drivability.md` (2026-10-26) : tous les besoins v1 pilotables ; pas de flux d'événements pour les 403 |
 | Des devs non initiés adopteraient le sandboxing grâce à une GUI | assumption | à tester après la v1, auprès de quelques devs |
 | sandy pilote `sbx` et ne refait rien de ce qu'il fait | decision | brainstorm, `aidd_docs/memory/architecture.md` |
 | sandy est un outil autonome, pas une extension d'un ADE existant | decision | 2026-10-26, après l'essai T3 Code |
@@ -51,7 +51,7 @@ Si chaque friction entre l'hôte et la sandbox se résout par un geste dans l'in
 
 ## Validation and Feedback
 
-- Prochaine validation : un spike sur la doc et la CLI de `sbx`, pour confirmer que chaque action de la v1 (installer, créer et lancer une session, `cp`) est pilotable proprement, avec une sortie lisible par une machine.
+- Prochaine validation : le premier usage réel de la v1 par l'auteur, sur un vrai projet, en comptant les commandes `sbx` encore tapées à côté.
 - Retours après usage : chaque semaine, l'auteur note les commandes `sbx` qu'il a encore dû taper. Chacune devient une issue GitHub candidate et oriente la priorité des frictions suivantes.
 
 ## Open Decisions
