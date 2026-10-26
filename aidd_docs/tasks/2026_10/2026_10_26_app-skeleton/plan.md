@@ -1,6 +1,6 @@
 ---
 objective: "sandy a un squelette Electron hexagonal où `pnpm dev` ouvre une fenêtre vide, où le lint de frontières protège `src/core`, et où la CI 3 OS fait passer typecheck, lint, test et build."
-status: implemented
+status: reviewed
 ---
 
 # Plan: squelette de l'app
