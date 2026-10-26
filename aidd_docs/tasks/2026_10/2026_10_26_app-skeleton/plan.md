@@ -34,4 +34,8 @@ status: implemented
 | TypeScript 6.0.x, pas 7 | typescript-eslint 8.72 exige `typescript < 6.1` ; TS 7 casserait le lint |
 | pnpm 10 épinglé via `packageManager` | conforme à `INSTALL.md` ; `onlyBuiltDependencies` y est le mécanisme documenté pour autoriser les scripts de build d'`electron` et `esbuild` |
 | electron-vite avec entrées personnalisées (`src/shell/electron/main.ts`, `src/shell/electron/preload/index.ts`, `src/ui`) | l'arborescence hexagonale de `INSTALL.md` remplace la structure par défaut `src/main`, `src/preload`, `src/renderer` |
+| `postinstall: install-electron` | Electron 45 ne télécharge plus son binaire à l'installation ; sans ce script, `pnpm dev` échoue sur un clone propre |
+| Preload construit en CommonJS (`.cjs`) | Electron exige un preload CommonJS quand `sandbox: true`, alors que le paquet est en `type: module` |
+| L'UI peut importer des paquets externes, sauf `electron` | React et ses dépendances sont nécessaires ; le renderer ne parle au process principal que par l'API du preload |
+| Node 22.12+ requis, CI sur Node 24 | `INSTALL.md` recommande Node 24 LTS ; `engines` accepte 22.12+ (minimum d'Electron 45 et de Vitest 5) |
 | `node-pty` hors de ce plan | aucun PTY n'est nécessaire pour une fenêtre vide ; il arrive avec la story #3 |

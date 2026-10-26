@@ -98,7 +98,7 @@ sandy/
 ├── .github/workflows/              # CI + build signé macOS/Windows/Linux
 ├── electron-builder.yml
 ├── electron.vite.config.ts
-├── pnpm-workspace.yaml             # onlyBuiltDependencies (electron, node-pty, esbuild)
+├── pnpm-workspace.yaml             # onlyBuiltDependencies (modules natifs : node-pty)
 ├── .npmrc                          # node-linker=hoisted (packaging Electron)
 └── package.json
 ```
@@ -112,7 +112,7 @@ Installation manuelle : le framework ne génère pas encore ces étapes automati
 3. Initialiser le repo GitHub public `sandy` (branche `main`, licence open source à choisir).
 4. Configurer pnpm pour Electron :
    - `node-linker=hoisted` dans `.npmrc` ;
-   - autoriser les scripts de build de `electron`, `node-pty` et `esbuild` via `onlyBuiltDependencies`, parce que pnpm 10 les bloque par défaut.
+   - autoriser les scripts de build des modules natifs (`node-pty`) via `onlyBuiltDependencies`, parce que pnpm 10 les bloque par défaut. Le binaire Electron est téléchargé par le `postinstall` (`install-electron`).
 5. Créer le projet avec le template `electron-vite` (React + TS), puis réorganiser selon l'arborescence ci-dessus et brancher `@electron/rebuild` pour `node-pty`.
 6. Mettre en place la CI GitHub Actions (lint de frontières, tests, build sur les 3 OS) puis la signature : compte Apple Developer, demande SignPath Foundation pour Windows, Linux sur Ubuntu 24.04+.
 
