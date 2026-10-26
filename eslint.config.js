@@ -18,7 +18,7 @@ export default defineConfig(
         { type: 'ui', pattern: 'src/ui' },
         { type: 'contracts', pattern: 'src/contracts' },
       ],
-      'boundaries/files': [{ category: 'test', pattern: '**/*.test.ts' }],
+      'boundaries/files': [{ category: 'test', pattern: '**/*.test.{ts,tsx}' }],
     },
     rules: {
       'boundaries/dependencies': [
@@ -41,10 +41,13 @@ export default defineConfig(
               from: { element: { types: { anyOf: ['adapters', 'shell', 'pty-host'] } } },
               allow: { to: { module: { origin: ['external', 'core'] } } },
             },
+            { from: { element: { type: 'pty-host' } }, allow: { to: { element: { type: 'contracts' } } } },
             {
               from: { element: { type: 'ui' } },
               allow: { to: [{ element: { types: { anyOf: ['ui', 'contracts'] } } }, { module: { origin: 'external' } }] },
             },
+            // The renderer reaches the main process only through the preload API.
+            { from: { element: { type: 'ui' } }, disallow: { to: { module: { source: ['electron', 'electron/*'] } } } },
           ],
         },
       ],
