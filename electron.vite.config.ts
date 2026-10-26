@@ -6,7 +6,12 @@ export default defineConfig({
   main: {
     build: {
       rolldownOptions: {
-        input: { main: resolve('src/shell/electron/main.ts') },
+        input: {
+          main: resolve('src/shell/electron/main.ts'),
+          'pty-host': resolve('src/pty-host/index.ts'),
+        },
+        // Native module: loaded from node_modules at runtime, never bundled.
+        external: ['node-pty'],
       },
     },
   },

@@ -1,0 +1,3 @@
+# Installer builds come with #12. node-pty is native: it must stay outside the asar.
+asarUnpack:
+  - node_modules/node-pty/**
