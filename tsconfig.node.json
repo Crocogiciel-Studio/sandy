@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/shell/**/*",
+    "src/adapters/**/*",
+    "src/pty-host/**/*",
+    "src/core/**/*",
+    "src/contracts/**/*",
+    "*.config.ts"
+  ]
+}
