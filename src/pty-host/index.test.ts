@@ -63,7 +63,9 @@ describe('pty-host', () => {
 
     host.send({ type: 'resize', id: 'a', cols: 120, rows: 40 });
 
-    await host.waitFor(() => (host.output().includes('size:120x40') ? true : undefined), 10000);
+    // ConPTY applies the resize (it emits the xterm resize sequence) but Node keeps reporting the initial size.
+    const resized = process.platform === 'win32' ? '\u001b[8;40;120t' : 'size:120x40';
+    await host.waitFor(() => (host.output().includes(resized) ? true : undefined), 10000);
     host.send({ type: 'close', id: 'a' });
     await host.exitCode('a');
   }, 20000);
