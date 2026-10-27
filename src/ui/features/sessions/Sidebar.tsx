@@ -21,7 +21,7 @@ export const STATE_TEXT: Record<SessionState, (one: OpenSession) => string> = {
   working: () => 'travaille',
   waiting: () => 'à vous',
   attention: () => 'autorisation',
-  running: () => 'en cours',
+  running: () => '',
   ended: (one) => `terminée (${one.exitCode})`,
 };
 

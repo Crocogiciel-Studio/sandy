@@ -156,11 +156,6 @@ h2 {
   animation: pulse 1.4s ease-in-out infinite;
 }
 
-.dot[data-state='running'] {
-  background: var(--isolated);
-  border-color: var(--isolated);
-}
-
 .dot[data-state='waiting'],
 .dot[data-state='attention'] {
   background: var(--attention);
