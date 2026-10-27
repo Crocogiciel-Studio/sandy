@@ -1,6 +1,8 @@
 import './app.css';
 import { useState } from 'react';
+import type { SandboxSummary, StartSessionResult } from '../../contracts/api';
 import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSession';
+import { SandboxList } from '../features/sessions/SandboxList';
 import { openTerminal, Terminal, type TerminalSession } from '../features/terminal/Terminal';
 
 interface Running {
@@ -17,11 +19,14 @@ export function App() {
   const [active, setActive] = useState<string>(NEW);
   const [error, setError] = useState<string>();
 
-  async function launch({ agent, projectPath }: LaunchRequest): Promise<void> {
+  async function open(
+    agent: string,
+    projectPath: string,
+    start: (cols: number, rows: number) => Promise<StartSessionResult>,
+  ): Promise<void> {
     setError(undefined);
-    const result = await openTerminal(
-      (cols, rows) => window.sandy.session.start({ agent, projectPath, cols, rows }),
-      (id, exitCode) => setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, exitCode } : one))),
+    const result = await openTerminal(start, (id, exitCode) =>
+      setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, exitCode } : one))),
     );
     if (!result.ok) return setError(result.message);
     const folder = projectPath.split(/[\\/]/).filter(Boolean).pop() ?? projectPath;
@@ -33,6 +38,12 @@ export function App() {
     });
     setActive(result.session.id);
   }
+
+  const launch = ({ agent, projectPath }: LaunchRequest): Promise<void> =>
+    open(agent, projectPath, (cols, rows) => window.sandy.session.start({ agent, projectPath, cols, rows }));
+
+  const attach = ({ name, agent, workspaces }: SandboxSummary): Promise<void> =>
+    open(agent, workspaces[0] ?? name, (cols, rows) => window.sandy.session.attach({ name, cols, rows }));
 
   function close(one: Running): void {
     window.sandy.terminal.close(one.session.id);
@@ -78,7 +89,12 @@ export function App() {
       {running.map((one) => (
         <Terminal key={one.session.id} session={one.session} visible={active === one.session.id} />
       ))}
-      {active === NEW && <LaunchSession onLaunch={launch} error={error} />}
+      {active === NEW && (
+        <div style={{ overflow: 'auto' }}>
+          <LaunchSession onLaunch={launch} error={error} />
+          <SandboxList onAttach={attach} />
+        </div>
+      )}
     </div>
   );
 }

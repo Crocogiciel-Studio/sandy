@@ -1,0 +1,55 @@
+[
+  {
+    "name": "claude-website",
+    "id": "4c6dc023-87d0-40fa-8d84-6e36159226f9",
+    "agent": "claude",
+    "status": "stopped",
+    "last_used_at": "2026-09-05T17:48:33Z",
+    "workspaces": [
+      "/Users/me/Dev/website"
+    ],
+    "created_at": "2026-09-05T17:48:33Z"
+  },
+  {
+    "name": "claude-api-b3482f",
+    "id": "e4555d1b-6770-46b6-9c5e-587304b6a287",
+    "agent": "claude",
+    "status": "running",
+    "last_used_at": "2026-10-26T12:18:19.095521Z",
+    "workspaces": [
+      "/Users/me/Dev/api"
+    ],
+    "created_at": "2026-10-26T12:17:28Z"
+  },
+  {
+    "name": "claude-sandy",
+    "id": "aa9b56b4-8510-4add-b581-0f8511f5b288",
+    "agent": "claude",
+    "status": "running",
+    "last_used_at": "2026-10-26T12:03:48.750171Z",
+    "ports": [
+      {
+        "host_ip": "127.0.0.1",
+        "host_port": 49152,
+        "sandbox_port": 9418,
+        "protocol": "tcp4"
+      }
+    ],
+    "workspaces": [
+      "/Users/me/Dev/sandy"
+    ],
+    "created_at": "2026-10-23T07:59:35Z"
+  },
+  {
+    "name": "shell-api-af236c",
+    "id": "300ad4ab-ddc2-4048-8d6c-6cdfc014a858",
+    "agent": "shell",
+    "status": "stopped",
+    "last_used_at": "2026-10-26T12:21:04.529608Z",
+    "workspaces": [
+      "/Users/me/Dev/api",
+      "/Users/me/Dev/docs"
+    ],
+    "created_at": "2026-10-26T12:19:11Z"
+  }
+]

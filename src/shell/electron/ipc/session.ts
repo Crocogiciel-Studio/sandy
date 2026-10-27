@@ -3,11 +3,18 @@ import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { BrowserWindow, dialog, ipcMain } from 'electron';
 import { randomUUID } from 'node:crypto';
-import type { PrepareDropResult, StartSessionRequest, StartSessionResult } from '../../../contracts/api';
+import type {
+  AttachSessionRequest,
+  ListSandboxesResult,
+  PrepareDropResult,
+  StartSessionRequest,
+  StartSessionResult,
+} from '../../../contracts/api';
 import type { SandboxProvider } from '../../../core/ports/sandbox-provider';
 import { CommandNotFoundError, type TerminalProvider } from '../../../core/ports/terminal-provider';
 import { sandboxDropPath } from '../../../core/domain/dropped-file';
 import { sessionName } from '../../../core/domain/session-name';
+import { attachSession } from '../../../core/use-cases/attach-session';
 import { dropFiles } from '../../../core/use-cases/drop-files';
 import { startSession } from '../../../core/use-cases/start-session';
 import { isSize } from './terminal';
@@ -36,6 +43,27 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
     try {
       const id = await startSession(deps, { agent, projectPath, cols, rows });
       sessions.set(id, { sandboxName: sessionName(agent, projectPath), projectPath });
+      return { ok: true, id };
+    } catch (error) {
+      if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} n'est pas installé.` };
+      return { ok: false, message: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
+  ipcMain.handle('session:list-sandboxes', async (): Promise<ListSandboxesResult> => {
+    try {
+      return { ok: true, sandboxes: await deps.sandbox.list() };
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
+  ipcMain.handle('session:attach', async (_event, request: AttachSessionRequest): Promise<StartSessionResult> => {
+    const { name, cols, rows } = request;
+    if (typeof name !== 'string' || !isSize(cols) || !isSize(rows)) return { ok: false, message: 'Requête de session invalide.' };
+    try {
+      const { id, sandbox } = await attachSession(deps, { name, cols, rows });
+      sessions.set(id, { sandboxName: sandbox.name, projectPath: sandbox.workspaces[0] ?? '' });
       return { ok: true, id };
     } catch (error) {
       if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} n'est pas installé.` };

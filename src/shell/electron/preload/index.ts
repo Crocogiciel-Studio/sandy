@@ -19,6 +19,8 @@ const api: SandyApi = {
     pickProject: () => ipcRenderer.invoke('session:pick-project'),
     listAgents: () => ipcRenderer.invoke('session:list-agents'),
     start: (request) => ipcRenderer.invoke('session:start', request),
+    listSandboxes: () => ipcRenderer.invoke('session:list-sandboxes'),
+    attach: (request) => ipcRenderer.invoke('session:attach', request),
     prepareDrop: (id, hostPaths) => ipcRenderer.invoke('session:prepare-drop', id, hostPaths),
     pasteImage: (id, image, mimeType) => ipcRenderer.invoke('session:paste-image', id, image, mimeType),
   },

@@ -17,6 +17,9 @@ export interface SessionApi {
   pickProject(): Promise<string | undefined>;
   listAgents(): Promise<string[]>;
   start(request: StartSessionRequest): Promise<StartSessionResult>;
+  listSandboxes(): Promise<ListSandboxesResult>;
+  // Re-attaches the agent of an existing sandbox.
+  attach(request: AttachSessionRequest): Promise<StartSessionResult>;
   // Makes dropped host files reachable by the session's agent; resolves with the paths to type.
   prepareDrop(id: string, hostPaths: string[]): Promise<PrepareDropResult>;
   // Same for a clipboard image (png, jpeg, gif or webp): resolves with the sandbox path to type.
@@ -38,3 +41,19 @@ export interface StartSessionRequest {
 export type StartSessionResult = { ok: true; id: string } | { ok: false; message: string };
 
 export type PrepareDropResult = { ok: true; paths: string[] } | { ok: false; message: string };
+
+export interface SandboxSummary {
+  name: string;
+  agent: string;
+  status: string;
+  workspaces: string[];
+  lastUsedAt?: string;
+}
+
+export type ListSandboxesResult = { ok: true; sandboxes: SandboxSummary[] } | { ok: false; message: string };
+
+export interface AttachSessionRequest {
+  name: string;
+  cols: number;
+  rows: number;
+}
