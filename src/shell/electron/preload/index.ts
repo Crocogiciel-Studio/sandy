@@ -19,6 +19,7 @@ const api: SandyApi = {
     pickProject: () => ipcRenderer.invoke('session:pick-project'),
     listAgents: () => ipcRenderer.invoke('session:list-agents'),
     start: (request) => ipcRenderer.invoke('session:start', request),
+    prepareDrop: (id, hostPaths) => ipcRenderer.invoke('session:prepare-drop', id, hostPaths),
   },
   files: {
     pathsFor: (files) => files.map((file) => webUtils.getPathForFile(file)).filter((path) => path !== ''),

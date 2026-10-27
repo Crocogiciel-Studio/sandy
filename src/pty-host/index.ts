@@ -1,8 +1,8 @@
 import { accessSync, constants, statSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { delimiter, isAbsolute, join, resolve } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { spawn, type IPty } from 'node-pty';
 import type { PtyEvent, PtyRequest } from '../contracts/pty-messages';
+import { searchDirs } from './search-dirs';
 
 const FLUSH_DELAY_MS = 8;
 
@@ -74,12 +74,6 @@ function findExecutable(command: string, cwd: string): string | undefined {
     }
   }
   return undefined;
-}
-
-// A Dock-launched macOS app gets a minimal PATH without the usual install dirs.
-function searchDirs(): string[] {
-  const extra = process.platform === 'win32' ? [] : ['/opt/homebrew/bin', '/usr/local/bin', join(homedir(), '.local/bin')];
-  return [...(process.env['PATH'] ?? '').split(delimiter).filter(Boolean), ...extra];
 }
 
 function isExecutable(file: string): boolean {
