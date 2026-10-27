@@ -19,6 +19,8 @@ export interface SessionApi {
   start(request: StartSessionRequest): Promise<StartSessionResult>;
   // Makes dropped host files reachable by the session's agent; resolves with the paths to type.
   prepareDrop(id: string, hostPaths: string[]): Promise<PrepareDropResult>;
+  // Same for a clipboard image (png, jpeg, gif or webp): resolves with the sandbox path to type.
+  pasteImage(id: string, image: ArrayBuffer, mimeType: string): Promise<PrepareDropResult>;
 }
 
 export interface FilesApi {
