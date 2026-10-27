@@ -1,7 +1,11 @@
 import { join } from 'node:path';
 import { app, BrowserWindow } from 'electron';
+import { SbxSandboxProvider } from '../../adapters/sandbox/sbx/sbx-sandbox-provider';
+import { NodePtyTerminal } from '../../adapters/terminal/node-pty/node-pty-terminal';
+import { registerSessionIpc } from './ipc/session';
+import { registerTerminalIpc } from './ipc/terminal';
 
-function createWindow(): void {
+function createWindow(terminal: NodePtyTerminal): void {
   const window = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -14,6 +18,8 @@ function createWindow(): void {
     },
   });
 
+  // Without a window nothing can reach the sessions, so stop the agents instead of orphaning them.
+  window.on('closed', () => terminal.closeAll());
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
 
@@ -26,10 +32,15 @@ function createWindow(): void {
 }
 
 void app.whenReady().then(() => {
-  createWindow();
+  const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'));
+  registerTerminalIpc(terminal);
+  registerSessionIpc({ sandbox: new SbxSandboxProvider(), terminal });
+  createWindow(terminal);
+
+  app.on('before-quit', () => terminal.dispose());
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(terminal);
   });
 });
 

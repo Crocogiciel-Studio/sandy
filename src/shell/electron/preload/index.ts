@@ -1,6 +1,25 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { SandyApi } from '../../../contracts/api';
 
-const api: SandyApi = {};
+function subscribe<T extends unknown[]>(channel: string, listener: (...args: T) => void): () => void {
+  const handler = (_event: IpcRendererEvent, ...args: unknown[]): void => listener(...(args as T));
+  ipcRenderer.on(channel, handler);
+  return () => ipcRenderer.off(channel, handler);
+}
+
+const api: SandyApi = {
+  terminal: {
+    write: (id, data) => ipcRenderer.send('terminal:write', id, data),
+    resize: (id, cols, rows) => ipcRenderer.send('terminal:resize', id, cols, rows),
+    close: (id) => ipcRenderer.send('terminal:close', id),
+    onData: (listener) => subscribe('terminal:data', listener),
+    onExit: (listener) => subscribe('terminal:exit', listener),
+  },
+  session: {
+    pickProject: () => ipcRenderer.invoke('session:pick-project'),
+    listAgents: () => ipcRenderer.invoke('session:list-agents'),
+    start: (request) => ipcRenderer.invoke('session:start', request),
+  },
+};
 
 contextBridge.exposeInMainWorld('sandy', api);
