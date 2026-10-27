@@ -46,4 +46,14 @@ describe('SbxSandboxProvider', () => {
   it('re-attaches with sbx run --name NAME', () => {
     expect(provider.attachCommand('claude-app')).toEqual({ command: 'sbx', args: ['run', '--name', 'claude-app'] });
   });
+
+  it('stops with sbx stop NAME and removes with sbx rm -f NAME', async () => {
+    const calls: string[][] = [];
+    const managing = new SbxSandboxProvider(async (args) => (calls.push(args), ''));
+
+    await managing.stop('claude-app');
+    await managing.remove('claude-app');
+
+    expect(calls).toEqual([['stop', 'claude-app'], ['rm', '-f', 'claude-app']]);
+  });
 });

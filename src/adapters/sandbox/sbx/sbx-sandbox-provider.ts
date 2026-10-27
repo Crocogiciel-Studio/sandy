@@ -39,6 +39,15 @@ export class SbxSandboxProvider implements SandboxProvider {
     return parseSandboxList(await this.run(['ls', '--json']));
   }
 
+  // Names reach sbx only after use-case validation against `sbx ls`. rm -f skips sbx's own prompt: sandy asks first.
+  async stop(name: string): Promise<void> {
+    await this.run(['stop', name]);
+  }
+
+  async remove(name: string): Promise<void> {
+    await this.run(['rm', '-f', name]);
+  }
+
   attachCommand(name: string): SessionCommand {
     return { command: 'sbx', args: ['run', '--name', name] };
   }

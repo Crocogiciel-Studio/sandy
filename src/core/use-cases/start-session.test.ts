@@ -8,6 +8,8 @@ const sandbox: SandboxProvider = {
   sessionCommand: ({ agent, projectPath, name }) => ({ command: 'sbx', args: ['run', agent, projectPath, '--name', name] }),
   list: async () => [],
   copyIn: async () => {},
+  stop: async () => {},
+  remove: async () => {},
   attachCommand: (name) => ({ command: 'sbx', args: ['run', '--name', name] }),
 };
 

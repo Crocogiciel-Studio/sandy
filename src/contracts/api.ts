@@ -18,6 +18,9 @@ export interface SessionApi {
   listAgents(): Promise<string[]>;
   start(request: StartSessionRequest): Promise<StartSessionResult>;
   listSandboxes(): Promise<ListSandboxesResult>;
+  // Closes the sandbox's open sessions first, then stops or deletes it.
+  stopSandbox(name: string): Promise<ActionResult>;
+  removeSandbox(name: string): Promise<ActionResult>;
   // Re-attaches the agent of an existing sandbox.
   attach(request: AttachSessionRequest): Promise<StartSessionResult>;
   // Makes dropped host files reachable by the session's agent; resolves with the paths to type.
@@ -57,3 +60,5 @@ export interface AttachSessionRequest {
   cols: number;
   rows: number;
 }
+
+export type ActionResult = { ok: true } | { ok: false; message: string };

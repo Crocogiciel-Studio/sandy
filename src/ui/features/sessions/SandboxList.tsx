@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { SandboxSummary } from '../../../contracts/api';
+import type { ActionResult, SandboxSummary } from '../../../contracts/api';
 
 export function SandboxList({ onAttach }: { onAttach: (sandbox: SandboxSummary) => Promise<void> }) {
   const [sandboxes, setSandboxes] = useState<SandboxSummary[]>();
   const [error, setError] = useState<string>();
-  const [attaching, setAttaching] = useState<string>();
+  const [busy, setBusy] = useState<string>();
 
-  const refresh = useCallback(async () => {
-    setError(undefined);
+  const refresh = useCallback(async (keepError = false) => {
+    if (!keepError) setError(undefined);
     try {
       const result = await window.sandy.session.listSandboxes();
       if (result.ok) setSandboxes(result.sandboxes);
@@ -21,12 +21,33 @@ export function SandboxList({ onAttach }: { onAttach: (sandbox: SandboxSummary) 
     void refresh();
   }, [refresh]);
 
+  async function act(sandbox: SandboxSummary, run: (name: string) => Promise<ActionResult>): Promise<void> {
+    setError(undefined);
+    setBusy(sandbox.name);
+    try {
+      const result = await run(sandbox.name);
+      if (!result.ok) setError(result.message);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setBusy(undefined);
+      void refresh(true);
+    }
+  }
+
+  const stop = (sandbox: SandboxSummary): Promise<void> => act(sandbox, window.sandy.session.stopSandbox);
+
+  function remove(sandbox: SandboxSummary): Promise<void> {
+    if (!window.confirm(`Supprimer définitivement la sandbox ${sandbox.name} ? Ses sessions ouvertes seront fermées.`)) return Promise.resolve();
+    return act(sandbox, window.sandy.session.removeSandbox);
+  }
+
   async function attach(sandbox: SandboxSummary): Promise<void> {
-    setAttaching(sandbox.name);
+    setBusy(sandbox.name);
     try {
       await onAttach(sandbox);
     } finally {
-      setAttaching(undefined);
+      setBusy(undefined);
     }
   }
 
@@ -63,8 +84,14 @@ export function SandboxList({ onAttach }: { onAttach: (sandbox: SandboxSummary) 
                 <td title={sandbox.workspaces.join('\n')}>{sandbox.workspaces[0] ?? '—'}</td>
                 <td>{sandbox.status}</td>
                 <td>
-                  <button type="button" disabled={attaching !== undefined || sandbox.workspaces.length === 0} onClick={() => void attach(sandbox)}>
+                  <button type="button" disabled={busy !== undefined || sandbox.workspaces.length === 0} onClick={() => void attach(sandbox)}>
                     Ouvrir
+                  </button>{' '}
+                  <button type="button" disabled={busy !== undefined || sandbox.status !== 'running'} onClick={() => void stop(sandbox)}>
+                    Arrêter
+                  </button>{' '}
+                  <button type="button" disabled={busy !== undefined} onClick={() => void remove(sandbox)}>
+                    Supprimer
                   </button>
                 </td>
               </tr>

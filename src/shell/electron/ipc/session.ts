@@ -4,6 +4,7 @@ import { isAbsolute, join } from 'node:path';
 import { BrowserWindow, dialog, ipcMain } from 'electron';
 import { randomUUID } from 'node:crypto';
 import type {
+  ActionResult,
   AttachSessionRequest,
   ListSandboxesResult,
   PrepareDropResult,
@@ -16,6 +17,7 @@ import { sandboxDropPath } from '../../../core/domain/dropped-file';
 import { sessionName } from '../../../core/domain/session-name';
 import { attachSession } from '../../../core/use-cases/attach-session';
 import { dropFiles } from '../../../core/use-cases/drop-files';
+import { removeSandbox, stopSandbox } from '../../../core/use-cases/manage-sandbox';
 import { startSession } from '../../../core/use-cases/start-session';
 import { isSize } from './terminal';
 
@@ -57,6 +59,22 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
       return { ok: false, message: error instanceof Error ? error.message : String(error) };
     }
   });
+
+  // sbx acts first: if it fails nothing is lost. On success, sessions it did not already end are closed,
+  // so their tabs report the exit instead of a dead PTY (closing an already-ended terminal is a no-op).
+  const manage = (act: (sandbox: SandboxProvider, name: string) => Promise<void>) =>
+    async (_event: unknown, name: unknown): Promise<ActionResult> => {
+      if (typeof name !== 'string') return { ok: false, message: 'Requête invalide.' };
+      try {
+        await act(deps.sandbox, name);
+        for (const [id, session] of sessions) if (session.sandboxName === name) deps.terminal.close(id);
+        return { ok: true };
+      } catch (error) {
+        return { ok: false, message: error instanceof Error ? error.message : String(error) };
+      }
+    };
+  ipcMain.handle('session:stop-sandbox', manage(stopSandbox));
+  ipcMain.handle('session:remove-sandbox', manage(removeSandbox));
 
   ipcMain.handle('session:attach', async (_event, request: AttachSessionRequest): Promise<StartSessionResult> => {
     const { name, cols, rows } = request;

@@ -11,6 +11,8 @@ function setup(sandboxes: SandboxInfo[]) {
     listAgents: () => [],
     list: async () => sandboxes,
     copyIn: async () => {},
+    stop: async () => {},
+    remove: async () => {},
     sessionCommand: () => ({ command: 'sbx', args: [] }),
     attachCommand: (name) => ({ command: 'sbx', args: ['run', '--name', name] }),
   };
