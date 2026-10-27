@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
-import type { StartSessionResult } from '../../../contracts/api';
+import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
 import { formatDroppedPaths } from './dropped-paths';
+
+const PASTABLE_IMAGES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export interface TerminalSession {
   id: string;
@@ -65,19 +68,10 @@ export function Terminal({ session }: { session: TerminalSession }) {
     observer.observe(element);
 
     let disposed = false;
-    const onDragOver = (event: DragEvent): void => {
-      if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
-    };
-    // Paste (bracketed when the agent asks for it) types the paths without pressing Enter.
-    const onDrop = (event: DragEvent): void => {
-      event.preventDefault();
+    // Types the paths the agent can open, or shows why not; nothing is typed on failure.
+    const deliver = (prepared: Promise<PrepareDropResult>): void => {
       setDropError(undefined);
-      const hostPaths = window.sandy.files.pathsFor([...(event.dataTransfer?.files ?? [])]);
-      session.xterm.focus();
-      if (hostPaths.length === 0) return;
-      // Files outside the project are copied into the sandbox first; on failure nothing is typed.
-      window.sandy.session
-        .prepareDrop(session.id, hostPaths)
+      prepared
         .then((result) => {
           if (disposed) return;
           if (result.ok) session.xterm.paste(formatDroppedPaths(result.paths));
@@ -85,13 +79,36 @@ export function Terminal({ session }: { session: TerminalSession }) {
         })
         .catch((error: unknown) => !disposed && setDropError(error instanceof Error ? error.message : String(error)));
     };
+    const onDragOver = (event: DragEvent): void => {
+      if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+    };
+    // Paste (bracketed when the agent asks for it) types the paths without pressing Enter.
+    const onDrop = (event: DragEvent): void => {
+      event.preventDefault();
+      const hostPaths = window.sandy.files.pathsFor([...(event.dataTransfer?.files ?? [])]);
+      session.xterm.focus();
+      if (hostPaths.length > 0) deliver(window.sandy.session.prepareDrop(session.id, hostPaths));
+    };
+    // Captured before xterm sees it: a text-free image (a screenshot) takes over the paste,
+    // anything with text (spreadsheet cells, a copied file name) keeps the normal path.
+    const onPaste = (event: ClipboardEvent): void => {
+      if (event.clipboardData?.getData('text/plain')) return;
+      const image = [...(event.clipboardData?.files ?? [])].find((file) => PASTABLE_IMAGES.includes(file.type));
+      if (!image) return;
+      if (image.size > MAX_IMAGE_BYTES) return setDropError('Image trop lourde (20 Mo maximum).');
+      event.preventDefault();
+      event.stopPropagation();
+      deliver(image.arrayBuffer().then((bytes) => window.sandy.session.pasteImage(session.id, bytes, image.type)));
+    };
     element.addEventListener('dragover', onDragOver);
     element.addEventListener('drop', onDrop);
+    element.addEventListener('paste', onPaste, true);
     return () => {
       disposed = true;
       observer.disconnect();
       element.removeEventListener('dragover', onDragOver);
       element.removeEventListener('drop', onDrop);
+      element.removeEventListener('paste', onPaste, true);
     };
   }, [session]);
 

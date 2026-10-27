@@ -20,6 +20,7 @@ const api: SandyApi = {
     listAgents: () => ipcRenderer.invoke('session:list-agents'),
     start: (request) => ipcRenderer.invoke('session:start', request),
     prepareDrop: (id, hostPaths) => ipcRenderer.invoke('session:prepare-drop', id, hostPaths),
+    pasteImage: (id, image, mimeType) => ipcRenderer.invoke('session:paste-image', id, image, mimeType),
   },
   files: {
     pathsFor: (files) => files.map((file) => webUtils.getPathForFile(file)).filter((path) => path !== ''),
