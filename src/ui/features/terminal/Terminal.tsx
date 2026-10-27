@@ -4,6 +4,7 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
 import { formatDroppedPaths } from './dropped-paths';
+import { type Activity, createActivityTracker } from './session-activity';
 import { currentTerminalTheme, followSystemTheme, terminalFont } from './terminal-theme';
 
 const PASTABLE_IMAGES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -22,6 +23,7 @@ export interface TerminalSession {
 export async function openTerminal(
   start: (cols: number, rows: number) => Promise<StartSessionResult>,
   onExit: (id: string, exitCode: number) => void,
+  onActivity: (id: string, activity: Activity) => void,
 ): Promise<{ ok: true; session: TerminalSession } | { ok: false; message: string }> {
   const { terminal } = window.sandy;
   const xterm = new XTerm({ cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
@@ -37,9 +39,19 @@ export async function openTerminal(
     if (started.id === undefined) early.push(() => eventId === started.id && deliver());
     else if (eventId === started.id) deliver();
   };
-  const offData = terminal.onData((eventId, data) => route(eventId, () => xterm.write(data)));
+  // Output right after the user typed or resized is echo or redraw, not the agent working.
+  const ECHO_MS = 300;
+  let lastInputAt = 0;
+  const tracker = createActivityTracker((activity) => started.id !== undefined && onActivity(started.id, activity));
+  const offData = terminal.onData((eventId, data) =>
+    route(eventId, () => {
+      xterm.write(data);
+      if (Date.now() - lastInputAt > ECHO_MS) tracker.touch();
+    }),
+  );
   const offExit = terminal.onExit((eventId, exitCode) =>
     route(eventId, () => {
+      tracker.stop();
       offData();
       offExit();
       onExit(eventId, exitCode);
@@ -48,6 +60,7 @@ export async function openTerminal(
 
   const result = await start(xterm.cols, xterm.rows);
   if (!result.ok) {
+    tracker.stop();
     offData();
     offExit();
     offTheme();
@@ -56,9 +69,17 @@ export async function openTerminal(
   }
   started.id = result.id;
   early.splice(0).forEach((deliver) => deliver());
-  xterm.onData((data) => terminal.write(result.id, data));
-  xterm.onResize(({ cols, rows }) => terminal.resize(result.id, cols, rows));
+  tracker.touch();
+  xterm.onData((data) => {
+    lastInputAt = Date.now();
+    terminal.write(result.id, data);
+  });
+  xterm.onResize(({ cols, rows }) => {
+    lastInputAt = Date.now();
+    terminal.resize(result.id, cols, rows);
+  });
   const dispose = (): void => {
+    tracker.stop();
     offData();
     offExit();
     offTheme();
@@ -68,7 +89,17 @@ export async function openTerminal(
 }
 
 // Stays mounted while hidden (display: none) so switching sessions never clears or cuts one.
-export function Terminal({ session, visible, ended }: { session: TerminalSession; visible: boolean; ended: boolean }) {
+interface TerminalProps {
+  session: TerminalSession;
+  visible: boolean;
+  ended: boolean;
+  title: string;
+  projectPath: string;
+  state: 'working' | 'waiting' | 'ended';
+  stateText: string;
+}
+
+export function Terminal({ session, visible, ended, title, projectPath, state, stateText }: TerminalProps) {
   const container = useRef<HTMLDivElement>(null);
   const [dropError, setDropError] = useState<string>();
 
@@ -133,6 +164,16 @@ export function Terminal({ session, visible, ended }: { session: TerminalSession
 
   return (
     <div className="terminal" data-state={ended ? 'ended' : 'running'} style={{ display: visible ? 'flex' : 'none' }}>
+      <header className="terminal-header">
+        <span className="dot" data-state={state} aria-hidden="true" />
+        <strong>{title}</strong>
+        <span className="quiet" title={projectPath}>
+          {projectPath.split(/[\\/]/).filter(Boolean).at(-1) ?? projectPath}
+        </span>
+        <span className="row-state" data-state={state} role="status">
+          {stateText}
+        </span>
+      </header>
       <div ref={container} className="terminal-screen" />
       {dropError && (
         <p role="alert" className="error">
