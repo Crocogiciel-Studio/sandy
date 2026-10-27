@@ -20,7 +20,7 @@ mac:
 win:
   target: nsis
 linux:
-  # No .deb until the package has a maintainer address to publish.
-  target: [AppImage]
+  target: [AppImage, deb]
+  maintainer: Crocogiciel Studio <guillaume.monrolin@crocogiciel.com>
   category: Development
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}

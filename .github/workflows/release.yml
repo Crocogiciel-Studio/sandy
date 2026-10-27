@@ -46,6 +46,7 @@ jobs:
             dist/*.zip
             dist/*.exe
             dist/*.AppImage
+            dist/*.deb
 
   publish:
     needs: build
