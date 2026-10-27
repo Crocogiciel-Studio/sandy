@@ -54,9 +54,9 @@ export function App() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 16, margin: 0, padding: '8px 16px', borderBottom: '1px solid #ccc' }}>sandy</h1>
-      <div role="tablist" style={{ display: 'flex', gap: 4, padding: '4px 16px', borderBottom: '1px solid #ccc' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'var(--font-ui)' }}>
+      <h1 style={{ fontSize: 16, margin: 0, padding: '8px 16px', borderBottom: '1px solid var(--line)' }}>sandy</h1>
+      <div role="tablist" style={{ display: 'flex', gap: 4, padding: '4px 16px', borderBottom: '1px solid var(--line)' }}>
         {running.map((one) => (
           <span key={one.session.id} style={{ display: 'inline-flex', gap: 2 }}>
             <button

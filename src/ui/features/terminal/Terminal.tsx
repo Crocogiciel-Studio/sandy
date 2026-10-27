@@ -4,6 +4,7 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
 import { formatDroppedPaths } from './dropped-paths';
+import { currentTerminalTheme, followSystemTheme, terminalFont } from './terminal-theme';
 
 const PASTABLE_IMAGES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
@@ -23,7 +24,10 @@ export async function openTerminal(
   onExit: (id: string, exitCode: number) => void,
 ): Promise<{ ok: true; session: TerminalSession } | { ok: false; message: string }> {
   const { terminal } = window.sandy;
-  const xterm = new XTerm({ cursorBlink: true, fontFamily: 'Menlo, Consolas, "DejaVu Sans Mono", monospace' });
+  const xterm = new XTerm({ cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
+  const offTheme = followSystemTheme((theme) => {
+    xterm.options.theme = theme;
+  });
   const fit = new FitAddon();
   xterm.loadAddon(fit);
 
@@ -46,6 +50,7 @@ export async function openTerminal(
   if (!result.ok) {
     offData();
     offExit();
+    offTheme();
     xterm.dispose();
     return result;
   }
@@ -56,6 +61,7 @@ export async function openTerminal(
   const dispose = (): void => {
     offData();
     offExit();
+    offTheme();
     xterm.dispose();
   };
   return { ok: true, session: { id: result.id, xterm, fit, dispose } };
@@ -127,9 +133,9 @@ export function Terminal({ session, visible }: { session: TerminalSession; visib
 
   return (
     <div style={{ display: visible ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div ref={container} style={{ flex: 1, minHeight: 0, background: '#000', padding: 4 }} />
+      <div ref={container} style={{ flex: 1, minHeight: 0, background: 'var(--bg)', padding: 8 }} />
       {dropError && (
-        <p role="alert" style={{ margin: 0, padding: '4px 16px', color: '#b00020' }}>
+        <p role="alert" style={{ margin: 0, padding: '4px 16px', color: 'var(--danger)' }}>
           {dropError}
         </p>
       )}
