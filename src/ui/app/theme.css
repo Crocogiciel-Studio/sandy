@@ -1,0 +1,66 @@
+/* Design tokens. Dark is the default; light follows the system. Hues carry meaning, not decoration:
+   --isolated = a session running inside its sandbox, --attention = something waits for the user. */
+:root {
+  color-scheme: dark light;
+
+  --bg: #161a22;
+  --surface: #1e232d;
+  --line: #2c3341;
+  --text: #d9dee7;
+  --text-muted: #8a93a5;
+  --isolated: #5fb8a6;
+  --attention: #e0a458;
+  --danger: #e26d6d;
+
+  --font-ui: 'Instrument Sans', system-ui, sans-serif;
+  --font-mono: 'Commit Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+
+  --term-black: #2c3341;
+  --term-red: #e26d6d;
+  --term-green: #7dbe8c;
+  --term-yellow: #e0a458;
+  --term-blue: #6fa0e0;
+  --term-magenta: #b58bd9;
+  --term-cyan: #5fb8a6;
+  --term-white: #d9dee7;
+  --term-bright-black: #4a5366;
+  --term-bright-red: #ee8f8f;
+  --term-bright-green: #9ad1a6;
+  --term-bright-yellow: #ebbe7f;
+  --term-bright-blue: #92b8ea;
+  --term-bright-magenta: #c9a8e4;
+  --term-bright-cyan: #84cdbe;
+  --term-bright-white: #f2f5fa;
+  --term-selection: #2f4a57;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f7fa;
+    --surface: #eceff4;
+    --line: #d5dbe5;
+    --text: #1d2430;
+    --text-muted: #5e6779;
+    --isolated: #1a7f6e;
+    --attention: #a8650f;
+    --danger: #c0392b;
+
+    --term-black: #1d2430;
+    --term-red: #b3372f;
+    --term-green: #2f7d4a;
+    --term-yellow: #8a5a0c;
+    --term-blue: #2c5fa8;
+    --term-magenta: #7b4ba3;
+    --term-cyan: #1a7f6e;
+    --term-white: #5e6779;
+    --term-bright-black: #5e6779;
+    --term-bright-red: #d0473e;
+    --term-bright-green: #3e9660;
+    --term-bright-yellow: #a8650f;
+    --term-bright-blue: #3e78c7;
+    --term-bright-magenta: #9360bd;
+    --term-bright-cyan: #23998a;
+    --term-bright-white: #8a93a5;
+    --term-selection: #cfe3df;
+  }
+}
