@@ -1,5 +1,9 @@
 # sandy
 
+[![CI](https://github.com/Crocogiciel-Studio/sandy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Crocogiciel-Studio/sandy/actions/workflows/ci.yml)
+[![Release](https://github.com/Crocogiciel-Studio/sandy/actions/workflows/release.yml/badge.svg)](https://github.com/Crocogiciel-Studio/sandy/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/Crocogiciel-Studio/sandy?include_prereleases)](https://github.com/Crocogiciel-Studio/sandy/releases)
+
 Desktop app to run AI coding agents (Claude Code, Codex, Gemini…) in [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`), with a real GUI.
 
 ## Download
