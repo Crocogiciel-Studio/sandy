@@ -17,7 +17,6 @@ import { sandboxDropPath } from '../../../core/domain/dropped-file';
 import { sessionName } from '../../../core/domain/session-name';
 import { attachSession } from '../../../core/use-cases/attach-session';
 import { dropFiles } from '../../../core/use-cases/drop-files';
-import { findSandbox } from '../../../core/use-cases/find-sandbox';
 import { removeSandbox, stopSandbox } from '../../../core/use-cases/manage-sandbox';
 import { startSession } from '../../../core/use-cases/start-session';
 import { isSize } from './terminal';
@@ -61,15 +60,14 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
     }
   });
 
-  // Sessions of that sandbox end first, so their tabs report the exit instead of a dead PTY.
+  // sbx acts first: if it fails nothing is lost. On success, sessions it did not already end are closed,
+  // so their tabs report the exit instead of a dead PTY (closing an already-ended terminal is a no-op).
   const manage = (act: (sandbox: SandboxProvider, name: string) => Promise<void>) =>
     async (_event: unknown, name: unknown): Promise<ActionResult> => {
       if (typeof name !== 'string') return { ok: false, message: 'Requête invalide.' };
       try {
-        // Validate first: an unknown name must not cost the user live sessions.
-        await findSandbox(deps.sandbox, name);
-        for (const [id, session] of sessions) if (session.sandboxName === name) deps.terminal.close(id);
         await act(deps.sandbox, name);
+        for (const [id, session] of sessions) if (session.sandboxName === name) deps.terminal.close(id);
         return { ok: true };
       } catch (error) {
         return { ok: false, message: error instanceof Error ? error.message : String(error) };
