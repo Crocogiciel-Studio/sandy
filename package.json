@@ -1,6 +1,9 @@
 {
   "name": "sandy",
   "version": "0.0.0",
+  "description": "Desktop app to run AI coding agents in Docker Sandboxes",
+  "author": "Crocogiciel Studio",
+  "homepage": "https://github.com/Crocogiciel-Studio/sandy",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -16,7 +19,8 @@
     "start": "electron-vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dist": "electron-builder --publish never"
   },
   "dependencies": {
     "@fontsource/commit-mono": "5.3.0",
@@ -33,6 +37,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "electron": "45.0.0",
+    "electron-builder": "26.18.0",
     "electron-vite": "6.0.0",
     "eslint": "10.13.0",
     "eslint-plugin-boundaries": "7.3.0",
