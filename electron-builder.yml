@@ -1,3 +1,25 @@
-# Installer builds come with #12. node-pty is native: it must stay outside the asar.
+appId: dev.crocogiciel.sandy
+productName: sandy
+directories:
+  output: dist
+files:
+  - out/**
+  - package.json
+# node-pty is native: it must stay outside the asar. It ships N-API prebuilds for every
+# platform and arch, so nothing needs recompiling for Electron.
+npmRebuild: false
 asarUnpack:
   - node_modules/node-pty/**
+# No paid certificate yet: ad-hoc signature on macOS (required to launch on Apple silicon), none on Windows.
+# Hardened runtime stays off: with an ad-hoc signature it rejects Electron's pre-signed frameworks.
+mac:
+  target: [dmg, zip]
+  identity: '-'
+  hardenedRuntime: false
+  category: public.app-category.developer-tools
+win:
+  target: nsis
+linux:
+  target: [AppImage, deb]
+  category: Development
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
