@@ -2,6 +2,7 @@
 export interface SandyApi {
   terminal: TerminalApi;
   session: SessionApi;
+  files: FilesApi;
 }
 
 export interface TerminalApi {
@@ -16,6 +17,11 @@ export interface SessionApi {
   pickProject(): Promise<string | undefined>;
   listAgents(): Promise<string[]>;
   start(request: StartSessionRequest): Promise<StartSessionResult>;
+}
+
+export interface FilesApi {
+  // Absolute host paths of dropped files; empty entries (files not backed by disk) are omitted.
+  pathsFor(files: File[]): string[];
 }
 
 export interface StartSessionRequest {
