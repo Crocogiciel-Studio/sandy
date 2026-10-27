@@ -52,52 +52,45 @@ export function SandboxList({ onAttach }: { onAttach: (sandbox: SandboxSummary) 
   }
 
   return (
-    <section style={{ padding: '0 16px 16px' }}>
-      <h2 style={{ fontSize: 14, margin: '8px 0' }}>
-        Sandboxes existantes{' '}
-        <button type="button" onClick={() => void refresh()}>
+    <section className="group sandboxes">
+      <h2>
+        Sandboxes
+        <button type="button" className="quiet" onClick={() => void refresh()}>
           Actualiser
         </button>
       </h2>
       {error && (
-        <p role="alert" style={{ color: '#c62828', margin: 0 }}>
+        <p role="alert" className="error">
           {error}
         </p>
       )}
-      {sandboxes?.length === 0 && <p style={{ margin: 0 }}>Aucune sandbox.</p>}
+      {sandboxes?.length === 0 && <p className="empty">Aucune sandbox. Lance une session pour en créer une.</p>}
       {sandboxes && sandboxes.length > 0 && (
-        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th align="left">Nom</th>
-              <th align="left">Agent</th>
-              <th align="left">Projet</th>
-              <th align="left">État</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {sandboxes.map((sandbox) => (
-              <tr key={sandbox.name}>
-                <td>{sandbox.name}</td>
-                <td>{sandbox.agent}</td>
-                <td title={sandbox.workspaces.join('\n')}>{sandbox.workspaces[0] ?? '—'}</td>
-                <td>{sandbox.status}</td>
-                <td>
-                  <button type="button" disabled={busy !== undefined || sandbox.workspaces.length === 0} onClick={() => void attach(sandbox)}>
-                    Ouvrir
-                  </button>{' '}
-                  <button type="button" disabled={busy !== undefined || sandbox.status !== 'running'} onClick={() => void stop(sandbox)}>
-                    Arrêter
-                  </button>{' '}
-                  <button type="button" disabled={busy !== undefined} onClick={() => void remove(sandbox)}>
-                    Supprimer
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul>
+          {sandboxes.map((sandbox) => (
+            <li key={sandbox.name} className="row">
+              <button
+                type="button"
+                className="row-main"
+                title={sandbox.workspaces.join('\n') || sandbox.name}
+                disabled={busy !== undefined || sandbox.workspaces.length === 0}
+                onClick={() => void attach(sandbox)}
+              >
+                <span className="dot" data-state={sandbox.status === 'running' ? 'idle' : 'ended'} aria-hidden="true" />
+                <span className="row-label">{sandbox.name}</span>
+                <span className="row-state">{sandbox.agent}</span>
+              </button>
+              <span className="actions">
+                <button type="button" disabled={busy !== undefined || sandbox.status !== 'running'} onClick={() => void stop(sandbox)}>
+                  Arrêter
+                </button>
+                <button type="button" disabled={busy !== undefined} onClick={() => void remove(sandbox)}>
+                  Supprimer
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

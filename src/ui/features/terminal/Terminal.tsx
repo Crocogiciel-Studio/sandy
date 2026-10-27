@@ -68,7 +68,7 @@ export async function openTerminal(
 }
 
 // Stays mounted while hidden (display: none) so switching sessions never clears or cuts one.
-export function Terminal({ session, visible }: { session: TerminalSession; visible: boolean }) {
+export function Terminal({ session, visible, ended }: { session: TerminalSession; visible: boolean; ended: boolean }) {
   const container = useRef<HTMLDivElement>(null);
   const [dropError, setDropError] = useState<string>();
 
@@ -132,10 +132,10 @@ export function Terminal({ session, visible }: { session: TerminalSession; visib
   }, [session, visible]);
 
   return (
-    <div style={{ display: visible ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div ref={container} style={{ flex: 1, minHeight: 0, background: 'var(--bg)', padding: 8 }} />
+    <div className="terminal" data-state={ended ? 'ended' : 'running'} style={{ display: visible ? 'flex' : 'none' }}>
+      <div ref={container} className="terminal-screen" />
       {dropError && (
-        <p role="alert" style={{ margin: 0, padding: '4px 16px', color: 'var(--danger)' }}>
+        <p role="alert" className="error">
           {dropError}
         </p>
       )}

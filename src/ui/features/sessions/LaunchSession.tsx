@@ -35,12 +35,13 @@ export function LaunchSession({ onLaunch, error }: { onLaunch: (request: LaunchR
 
   return (
     <form
-      style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 8, alignItems: 'center', padding: 16 }}
+      className="launch"
       onSubmit={(event) => {
         event.preventDefault();
         void launch();
       }}
     >
+      <h1>Nouvelle session</h1>
       <label htmlFor="project">Projet</label>
       <input id="project" value={projectPath} readOnly placeholder="Aucun dossier choisi" />
       <button type="button" onClick={() => void pickProject()}>
@@ -52,14 +53,11 @@ export function LaunchSession({ onLaunch, error }: { onLaunch: (request: LaunchR
           <option key={name}>{name}</option>
         ))}
       </select>
-      <span />
-      <span />
-      <span />
-      <button type="submit" disabled={!projectPath || !agent || launching}>
+      <button type="submit" className="primary" disabled={!projectPath || !agent || launching}>
         Lancer
       </button>
       {error && (
-        <p role="alert" style={{ gridColumn: '1 / -1', color: '#c62828', margin: 0 }}>
+        <p role="alert" className="error">
           {error}
         </p>
       )}
