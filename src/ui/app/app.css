@@ -17,3 +17,309 @@ body {
   outline: 2px solid var(--isolated);
   outline-offset: 2px;
 }
+
+body {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+button:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.error {
+  margin: 0;
+  padding: 4px 12px;
+  color: var(--danger);
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  height: 100vh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 8px;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.new-session {
+  text-align: left;
+  font-weight: 500;
+  border-color: var(--line);
+}
+
+.new-session:hover,
+.new-session[aria-current='true'] {
+  background: var(--bg);
+}
+
+.group h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  border-radius: 4px;
+}
+
+.row:hover,
+.row:focus-within,
+.row:has([aria-current='true']) {
+  background: var(--bg);
+}
+
+.row:has([aria-current='true'])::before {
+  content: '';
+  position: absolute;
+  inset: 4px auto 4px 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--text);
+}
+
+.row-main {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+}
+
+.row-main[aria-current='true'] .row-label {
+  font-weight: 600;
+}
+
+.row-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-state {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+}
+
+.dot[data-state='working'] {
+  background: var(--isolated);
+  border-color: var(--isolated);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.dot[data-state='waiting'],
+.dot[data-state='attention'] {
+  background: var(--attention);
+  border-color: var(--attention);
+}
+
+.dot[data-state='attention'] {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.row-state[data-state='waiting'],
+.row-state[data-state='attention'] {
+  color: var(--attention);
+  font-weight: 500;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.terminal-header .row-state {
+  margin-left: auto;
+}
+
+/* Actions stay out of sight until the row is hovered or has keyboard focus. */
+.actions {
+  position: absolute;
+  inset: 0 4px 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 12px;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.row:hover .actions,
+.row:focus-within .actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.actions button {
+  font-size: 12px;
+}
+
+.actions button:hover:not(:disabled) {
+  border-color: var(--line);
+}
+
+.quiet {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.empty {
+  margin: 0;
+  padding: 0 8px;
+  color: var(--text-muted);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* The frame is the sandbox boundary: its color is the session's state. */
+.terminal {
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 200ms;
+}
+
+.terminal[data-state='running'] {
+  border-color: var(--isolated);
+}
+
+.terminal-screen {
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+  background: var(--bg);
+}
+
+.launch {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px 8px;
+  align-items: center;
+  align-content: start;
+  width: min(480px, 100%);
+  box-sizing: border-box;
+  padding: 48px 24px;
+  margin: 0 auto;
+}
+
+.launch h1 {
+  grid-column: 1 / -1;
+  font-size: 18px;
+}
+
+.launch select {
+  grid-column: 2 / -1;
+}
+
+.launch .error {
+  grid-column: 1 / -1;
+  padding: 0;
+}
+
+.launch input,
+.launch select {
+  padding: 5px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.launch button {
+  border-color: var(--line);
+}
+
+.launch .primary {
+  grid-column: 2;
+  justify-self: start;
+  background: var(--isolated);
+  border-color: var(--isolated);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.launch .primary:disabled {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal {
+    transition: none;
+  }
+
+  .dot[data-state='working'],
+  .dot[data-state='attention'] {
+    animation: none;
+  }
+}

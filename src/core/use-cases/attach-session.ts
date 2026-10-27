@@ -17,6 +17,6 @@ export async function attachSession(
   const sandbox = await findSandbox(deps.sandbox, name);
   const cwd = sandbox.workspaces[0];
   if (!cwd) throw new Error(`La sandbox ${name} n'a pas de workspace.`);
-  const { command, args } = deps.sandbox.attachCommand(name);
+  const { command, args } = deps.sandbox.attachCommand({ name, agent: sandbox.agent });
   return { id: await deps.terminal.open({ command, args, cwd, cols, rows }), sandbox };
 }

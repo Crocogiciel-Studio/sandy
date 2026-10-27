@@ -4,6 +4,8 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
 import { formatDroppedPaths } from './dropped-paths';
+import type { SessionState } from '../sessions/Sidebar';
+import { ACTIVITY_OSC, type Activity, parseActivity } from './session-activity';
 import { currentTerminalTheme, followSystemTheme, terminalFont } from './terminal-theme';
 
 const PASTABLE_IMAGES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -22,6 +24,7 @@ export interface TerminalSession {
 export async function openTerminal(
   start: (cols: number, rows: number) => Promise<StartSessionResult>,
   onExit: (id: string, exitCode: number) => void,
+  onActivity: (id: string, activity: Activity) => void,
 ): Promise<{ ok: true; session: TerminalSession } | { ok: false; message: string }> {
   const { terminal } = window.sandy;
   const xterm = new XTerm({ cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
@@ -30,6 +33,13 @@ export async function openTerminal(
   });
   const fit = new FitAddon();
   xterm.loadAddon(fit);
+  // Hooks of agents that have them report their state here; the sequence is swallowed, never drawn.
+  const activityOf: { id?: string } = {};
+  xterm.parser.registerOscHandler(ACTIVITY_OSC, (payload) => {
+    const activity = parseActivity(payload);
+    if (activity && activityOf.id !== undefined) onActivity(activityOf.id, activity);
+    return true;
+  });
 
   const started: { id?: string } = {};
   const early: Array<() => void> = [];
@@ -55,6 +65,7 @@ export async function openTerminal(
     return result;
   }
   started.id = result.id;
+  activityOf.id = result.id;
   early.splice(0).forEach((deliver) => deliver());
   xterm.onData((data) => terminal.write(result.id, data));
   xterm.onResize(({ cols, rows }) => terminal.resize(result.id, cols, rows));
@@ -68,7 +79,17 @@ export async function openTerminal(
 }
 
 // Stays mounted while hidden (display: none) so switching sessions never clears or cuts one.
-export function Terminal({ session, visible }: { session: TerminalSession; visible: boolean }) {
+interface TerminalProps {
+  session: TerminalSession;
+  visible: boolean;
+  ended: boolean;
+  title: string;
+  projectPath: string;
+  state: SessionState;
+  stateText: string;
+}
+
+export function Terminal({ session, visible, ended, title, projectPath, state, stateText }: TerminalProps) {
   const container = useRef<HTMLDivElement>(null);
   const [dropError, setDropError] = useState<string>();
 
@@ -132,10 +153,20 @@ export function Terminal({ session, visible }: { session: TerminalSession; visib
   }, [session, visible]);
 
   return (
-    <div style={{ display: visible ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div ref={container} style={{ flex: 1, minHeight: 0, background: 'var(--bg)', padding: 8 }} />
+    <div className="terminal" data-state={ended ? 'ended' : 'running'} style={{ display: visible ? 'flex' : 'none' }}>
+      <header className="terminal-header">
+        <span className="dot" data-state={state} aria-hidden="true" />
+        <strong>{title}</strong>
+        <span className="quiet" title={projectPath}>
+          {projectPath.split(/[\\/]/).filter(Boolean).at(-1) ?? projectPath}
+        </span>
+        <span className="row-state" data-state={state} role="status">
+          {stateText}
+        </span>
+      </header>
+      <div ref={container} className="terminal-screen" />
       {dropError && (
-        <p role="alert" style={{ margin: 0, padding: '4px 16px', color: 'var(--danger)' }}>
+        <p role="alert" className="error">
           {dropError}
         </p>
       )}

@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { delimiter } from 'node:path';
 import type { SandboxInfo, SandboxProvider, SessionCommand } from '../../../core/ports/sandbox-provider';
 import { searchDirs } from '../../../pty-host/search-dirs';
+import { agentArgs } from './agent-hooks';
 import { parseSandboxList } from './sbx-list';
 
 // Built-in agents listed by `sbx run --help` (latest observed); sbx exposes no JSON list.
@@ -32,7 +33,7 @@ export class SbxSandboxProvider implements SandboxProvider {
   }
 
   sessionCommand({ agent, projectPath, name }: { agent: string; projectPath: string; name: string }): SessionCommand {
-    return { command: 'sbx', args: ['run', agent, projectPath, '--name', name] };
+    return { command: 'sbx', args: ['run', agent, projectPath, '--name', name, ...agentArgs(agent)] };
   }
 
   async list(): Promise<SandboxInfo[]> {
@@ -48,8 +49,8 @@ export class SbxSandboxProvider implements SandboxProvider {
     await this.run(['rm', '-f', name]);
   }
 
-  attachCommand(name: string): SessionCommand {
-    return { command: 'sbx', args: ['run', '--name', name] };
+  attachCommand({ name, agent }: { name: string; agent: string }): SessionCommand {
+    return { command: 'sbx', args: ['run', '--name', name, ...agentArgs(agent)] };
   }
 
   async copyIn({ sandboxName, hostPath, sandboxPath }: { sandboxName: string; hostPath: string; sandboxPath: string }): Promise<void> {

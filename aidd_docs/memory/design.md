@@ -26,8 +26,10 @@
 
 - Terminal : xterm.js avec l'addon WebGL, et repli sur le renderer DOM si le contexte WebGL est perdu. Son thème est dérivé des tokens et suit le thème du système.
 
-## Direction (écrans à venir)
+## Layout
 
-- Sidebar étroite de sessions groupées par projet, un point d'état par session, sans barre d'onglets.
-- Actions à la demande (survol, palette `⌘K`), pas de boutons permanents. Pas de cartes ni de dégradés.
-- Vocabulaire de l'utilisateur, pas celui de `sbx`.
+- Sidebar étroite : « Nouvelle session », sessions ouvertes groupées par projet (point d'état), puis les sandboxes existantes. Pas de barre d'onglets.
+- Le terminal occupe la zone principale ; son filet est la frontière de sandbox (`--isolated` en cours, `--line` terminée).
+- Actions (fermer, arrêter, supprimer) visibles au survol ou au focus clavier seulement. Pas de cartes ni de dégradés.
+- Styles en classes dans `app.css`, pas d'inline. Vocabulaire de l'utilisateur, pas celui de `sbx`.
+- À venir : palette `⌘K`.

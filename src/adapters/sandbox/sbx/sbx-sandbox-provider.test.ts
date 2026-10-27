@@ -22,8 +22,15 @@ describe('SbxSandboxProvider', () => {
 
   it('runs sbx run AGENT PATH --name NAME', () => {
     expect(
-      provider.sessionCommand({ agent: 'claude', projectPath: '/home/me/Mon Projet', name: 'claude-mon-projet-1a2b3c' }),
-    ).toEqual({ command: 'sbx', args: ['run', 'claude', '/home/me/Mon Projet', '--name', 'claude-mon-projet-1a2b3c'] });
+      provider.sessionCommand({ agent: 'codex', projectPath: '/home/me/Mon Projet', name: 'codex-mon-projet-1a2b3c' }),
+    ).toEqual({ command: 'sbx', args: ['run', 'codex', '/home/me/Mon Projet', '--name', 'codex-mon-projet-1a2b3c'] });
+  });
+
+  it('hands Claude its state-reporting hooks after --', () => {
+    const { args } = provider.sessionCommand({ agent: 'claude', projectPath: '/p', name: 'claude-p-1a2b3c' });
+    expect(args.slice(0, 6)).toEqual(['run', 'claude', '/p', '--name', 'claude-p-1a2b3c', '--']);
+    expect(args[6]).toBe('--settings');
+    expect(Object.keys(JSON.parse(args[7]!).hooks)).toEqual(['UserPromptSubmit', 'PostToolUse', 'Notification', 'Stop']);
   });
 
   it('copies a file with sbx cp SRC SANDBOX:DST', async () => {
@@ -44,7 +51,8 @@ describe('SbxSandboxProvider', () => {
   });
 
   it('re-attaches with sbx run --name NAME', () => {
-    expect(provider.attachCommand('claude-app')).toEqual({ command: 'sbx', args: ['run', '--name', 'claude-app'] });
+    expect(provider.attachCommand({ name: 'codex-app', agent: 'codex' })).toEqual({ command: 'sbx', args: ['run', '--name', 'codex-app'] });
+    expect(provider.attachCommand({ name: 'claude-app', agent: 'claude' }).args.slice(0, 4)).toEqual(['run', '--name', 'claude-app', '--']);
   });
 
   it('stops with sbx stop NAME and removes with sbx rm -f NAME', async () => {

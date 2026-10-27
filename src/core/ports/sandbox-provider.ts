@@ -23,5 +23,5 @@ export interface SandboxProvider {
   stop(name: string): Promise<void>;
   remove(name: string): Promise<void>;
   // Re-attaches the agent of an existing sandbox.
-  attachCommand(name: string): SessionCommand;
+  attachCommand(request: { name: string; agent: string }): SessionCommand;
 }
