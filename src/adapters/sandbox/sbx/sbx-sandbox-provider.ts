@@ -1,22 +1,24 @@
 import { execFile } from 'node:child_process';
 import { delimiter } from 'node:path';
-import type { SandboxProvider, SessionCommand } from '../../../core/ports/sandbox-provider';
+import type { SandboxInfo, SandboxProvider, SessionCommand } from '../../../core/ports/sandbox-provider';
 import { searchDirs } from '../../../pty-host/search-dirs';
+import { parseSandboxList } from './sbx-list';
 
-// Built-in agents listed by `sbx run --help` (v0.49.2); sbx exposes no JSON list.
-const AGENTS = ['claude', 'codex', 'cursor', 'devin', 'docker-agent', 'gemini', 'opencode', 'shell'] as const;
-const COPY_TIMEOUT_MS = 60_000;
+// Built-in agents listed by `sbx run --help` (latest observed); sbx exposes no JSON list.
+const AGENTS = ['claude', 'codex', 'copilot', 'cursor', 'devin', 'docker-agent', 'droid', 'gemini', 'kiro', 'opencode', 'shell'] as const;
+const SBX_TIMEOUT_MS = 60_000;
 
-export type RunSbx = (args: string[]) => Promise<void>;
+// Resolves with stdout.
+export type RunSbx = (args: string[]) => Promise<string>;
 
-// `sbx cp` has no --json: success is its exit code.
+// Actions without --json (`cp`) succeed or fail by exit code.
 const runSbx: RunSbx = (args) =>
   new Promise((resolve, reject) => {
     // Windows spells the key `Path`: overwrite it rather than adding a second one.
     const pathKey = Object.keys(process.env).find((key) => key.toUpperCase() === 'PATH') ?? 'PATH';
     const env = { ...process.env, [pathKey]: searchDirs().join(delimiter) };
-    execFile('sbx', args, { env, timeout: COPY_TIMEOUT_MS }, (error, _stdout, stderr) => {
-      if (!error) return resolve();
+    execFile('sbx', args, { env, timeout: SBX_TIMEOUT_MS }, (error, stdout, stderr) => {
+      if (!error) return resolve(stdout);
       const reason = stderr.trim().split('\n').pop() || error.message;
       reject(new Error(`sbx ${args[0]} a échoué : ${reason}`));
     });
@@ -33,7 +35,15 @@ export class SbxSandboxProvider implements SandboxProvider {
     return { command: 'sbx', args: ['run', agent, projectPath, '--name', name] };
   }
 
-  copyIn({ sandboxName, hostPath, sandboxPath }: { sandboxName: string; hostPath: string; sandboxPath: string }): Promise<void> {
-    return this.run(['cp', hostPath, `${sandboxName}:${sandboxPath}`]);
+  async list(): Promise<SandboxInfo[]> {
+    return parseSandboxList(await this.run(['ls', '--json']));
+  }
+
+  attachCommand(name: string): SessionCommand {
+    return { command: 'sbx', args: ['run', '--name', name] };
+  }
+
+  async copyIn({ sandboxName, hostPath, sandboxPath }: { sandboxName: string; hostPath: string; sandboxPath: string }): Promise<void> {
+    await this.run(['cp', hostPath, `${sandboxName}:${sandboxPath}`]);
   }
 }

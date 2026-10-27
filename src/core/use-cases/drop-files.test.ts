@@ -6,6 +6,8 @@ function fakeSandbox(fail = false) {
   const copies: Array<{ sandboxName: string; hostPath: string; sandboxPath: string }> = [];
   const sandbox: SandboxProvider = {
     listAgents: () => [],
+    list: async () => [],
+    attachCommand: () => ({ command: 'sbx', args: [] }),
     sessionCommand: () => ({ command: 'sbx', args: [] }),
     copyIn: async (request) => {
       if (fail) throw new Error('copy failed');

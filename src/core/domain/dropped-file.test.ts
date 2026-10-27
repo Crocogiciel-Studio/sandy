@@ -12,6 +12,10 @@ describe('isInsideProject', () => {
     expect(isInsideProject('/work/app', '/Users/me/Downloads/a.png')).toBe(false);
   });
 
+  it('never matches an empty project path', () => {
+    expect(isInsideProject('', '/a/b.ts')).toBe(false);
+  });
+
   it('ignores separator style and trailing separators', () => {
     expect(isInsideProject('C:\\work\\app\\', 'C:\\work\\app\\src\\a.ts')).toBe(true);
   });

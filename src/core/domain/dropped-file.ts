@@ -5,6 +5,7 @@ const SEPARATORS = /[\\/]+/;
 export function isInsideProject(projectPath: string, filePath: string): boolean {
   const project = segments(projectPath);
   const file = segments(filePath);
+  if (project.length === 0) return false;
   return file.length > project.length && project.every((part, index) => part === file[index]);
 }
 
