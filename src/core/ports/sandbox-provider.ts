@@ -19,6 +19,9 @@ export interface SandboxProvider {
   // Rejects when the copy fails.
   copyIn(request: { sandboxName: string; hostPath: string; sandboxPath: string }): Promise<void>;
   sessionCommand(request: { agent: string; projectPath: string; name: string }): SessionCommand;
+  // Both reject when sbx fails.
+  stop(name: string): Promise<void>;
+  remove(name: string): Promise<void>;
   // Re-attaches the agent of an existing sandbox.
   attachCommand(name: string): SessionCommand;
 }
