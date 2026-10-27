@@ -21,5 +21,6 @@ win:
   target: nsis
 linux:
   target: [AppImage, deb]
+  maintainer: Crocogiciel Studio <guillaume.monrolin@crocogiciel.com>
   category: Development
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
