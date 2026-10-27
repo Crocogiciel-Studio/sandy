@@ -4,43 +4,81 @@ import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSe
 import { openTerminal, Terminal, type TerminalSession } from '../features/terminal/Terminal';
 
 interface Running {
-  title: string;
+  label: string;
+  projectPath: string;
   session: TerminalSession;
+  exitCode?: number;
 }
 
+const NEW = 'new';
+
 export function App() {
-  const [running, setRunning] = useState<Running>();
+  const [running, setRunning] = useState<Running[]>([]);
+  const [active, setActive] = useState<string>(NEW);
   const [error, setError] = useState<string>();
-  const [exitCode, setExitCode] = useState<number>();
 
   async function launch({ agent, projectPath }: LaunchRequest): Promise<void> {
     setError(undefined);
-    setExitCode(undefined);
     const result = await openTerminal(
       (cols, rows) => window.sandy.session.start({ agent, projectPath, cols, rows }),
-      setExitCode,
+      (id, exitCode) => setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, exitCode } : one))),
     );
     if (!result.ok) return setError(result.message);
     const folder = projectPath.split(/[\\/]/).filter(Boolean).pop() ?? projectPath;
-    setRunning({ title: `${agent} · ${folder}`, session: result.session });
+    // Two sessions of the same agent on the same project must stay tellable apart.
+    setRunning((all) => {
+      const base = `${agent} · ${folder}`;
+      const same = all.filter((one) => one.label === base || one.label.startsWith(`${base} (`)).length;
+      return [...all, { label: same ? `${base} (${same + 1})` : base, projectPath, session: result.session }];
+    });
+    setActive(result.session.id);
+  }
+
+  function close(one: Running): void {
+    window.sandy.terminal.close(one.session.id);
+    one.session.dispose();
+    const remaining = running.filter((other) => other !== one);
+    setRunning(remaining);
+    if (active === one.session.id) setActive(remaining.at(-1)?.session.id ?? NEW);
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
       <h1 style={{ fontSize: 16, margin: 0, padding: '8px 16px', borderBottom: '1px solid #ccc' }}>sandy</h1>
-      {running ? (
-        <>
-          <div style={{ padding: '4px 16px' }}>{running.title}</div>
-          <Terminal session={running.session} />
-          {exitCode !== undefined && (
-            <p role="status" style={{ margin: 0, padding: '4px 16px' }}>
-              Session terminée (code {exitCode})
-            </p>
-          )}
-        </>
-      ) : (
-        <LaunchSession onLaunch={launch} error={error} />
-      )}
+      <div role="tablist" style={{ display: 'flex', gap: 4, padding: '4px 16px', borderBottom: '1px solid #ccc' }}>
+        {running.map((one) => (
+          <span key={one.session.id} style={{ display: 'inline-flex', gap: 2 }}>
+            <button
+              role="tab"
+              aria-selected={active === one.session.id}
+              title={one.projectPath}
+              style={{ fontWeight: active === one.session.id ? 700 : 400 }}
+              onClick={() => setActive(one.session.id)}
+            >
+              {one.label}
+              {one.exitCode !== undefined && ` (terminée, code ${one.exitCode})`}
+            </button>
+            <button aria-label={`Fermer ${one.label}`} onClick={() => close(one)}>
+              ×
+            </button>
+          </span>
+        ))}
+        <button
+          role="tab"
+          aria-selected={active === NEW}
+          style={{ fontWeight: active === NEW ? 700 : 400 }}
+          onClick={() => {
+            setError(undefined);
+            setActive(NEW);
+          }}
+        >
+          + Nouvelle session
+        </button>
+      </div>
+      {running.map((one) => (
+        <Terminal key={one.session.id} session={one.session} visible={active === one.session.id} />
+      ))}
+      {active === NEW && <LaunchSession onLaunch={launch} error={error} />}
     </div>
   );
 }
