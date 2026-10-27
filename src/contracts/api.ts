@@ -17,6 +17,8 @@ export interface SessionApi {
   pickProject(): Promise<string | undefined>;
   listAgents(): Promise<string[]>;
   start(request: StartSessionRequest): Promise<StartSessionResult>;
+  // Makes dropped host files reachable by the session's agent; resolves with the paths to type.
+  prepareDrop(id: string, hostPaths: string[]): Promise<PrepareDropResult>;
 }
 
 export interface FilesApi {
@@ -32,3 +34,5 @@ export interface StartSessionRequest {
 }
 
 export type StartSessionResult = { ok: true; id: string } | { ok: false; message: string };
+
+export type PrepareDropResult = { ok: true; paths: string[] } | { ok: false; message: string };

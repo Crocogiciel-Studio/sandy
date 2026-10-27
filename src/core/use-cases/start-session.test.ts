@@ -6,6 +6,7 @@ import { startSession } from './start-session';
 const sandbox: SandboxProvider = {
   listAgents: () => ['claude'],
   sessionCommand: ({ agent, projectPath, name }) => ({ command: 'sbx', args: ['run', agent, projectPath, '--name', name] }),
+  copyIn: async () => {},
 };
 
 function fakeTerminal(open: (options: TerminalOptions) => Promise<string>): TerminalProvider {

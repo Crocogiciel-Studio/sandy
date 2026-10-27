@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
@@ -53,6 +53,7 @@ export async function openTerminal(
 
 export function Terminal({ session }: { session: TerminalSession }) {
   const container = useRef<HTMLDivElement>(null);
+  const [dropError, setDropError] = useState<string>();
 
   useEffect(() => {
     const element = container.current;
@@ -63,24 +64,45 @@ export function Terminal({ session }: { session: TerminalSession }) {
     const observer = new ResizeObserver(() => session.fit.fit());
     observer.observe(element);
 
+    let disposed = false;
     const onDragOver = (event: DragEvent): void => {
       if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
     };
     // Paste (bracketed when the agent asks for it) types the paths without pressing Enter.
     const onDrop = (event: DragEvent): void => {
       event.preventDefault();
-      const paths = window.sandy.files.pathsFor([...(event.dataTransfer?.files ?? [])]);
-      if (paths.length > 0) session.xterm.paste(formatDroppedPaths(paths));
+      setDropError(undefined);
+      const hostPaths = window.sandy.files.pathsFor([...(event.dataTransfer?.files ?? [])]);
       session.xterm.focus();
+      if (hostPaths.length === 0) return;
+      // Files outside the project are copied into the sandbox first; on failure nothing is typed.
+      window.sandy.session
+        .prepareDrop(session.id, hostPaths)
+        .then((result) => {
+          if (disposed) return;
+          if (result.ok) session.xterm.paste(formatDroppedPaths(result.paths));
+          else setDropError(result.message);
+        })
+        .catch((error: unknown) => !disposed && setDropError(error instanceof Error ? error.message : String(error)));
     };
     element.addEventListener('dragover', onDragOver);
     element.addEventListener('drop', onDrop);
     return () => {
+      disposed = true;
       observer.disconnect();
       element.removeEventListener('dragover', onDragOver);
       element.removeEventListener('drop', onDrop);
     };
   }, [session]);
 
-  return <div ref={container} style={{ flex: 1, minHeight: 0, background: '#000', padding: 4 }} />;
+  return (
+    <>
+      <div ref={container} style={{ flex: 1, minHeight: 0, background: '#000', padding: 4 }} />
+      {dropError && (
+        <p role="alert" style={{ margin: 0, padding: '4px 16px', color: '#b00020' }}>
+          {dropError}
+        </p>
+      )}
+    </>
+  );
 }
