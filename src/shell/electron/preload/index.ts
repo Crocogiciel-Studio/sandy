@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
 import type { SandyApi } from '../../../contracts/api';
 
 function subscribe<T extends unknown[]>(channel: string, listener: (...args: T) => void): () => void {
@@ -19,6 +19,9 @@ const api: SandyApi = {
     pickProject: () => ipcRenderer.invoke('session:pick-project'),
     listAgents: () => ipcRenderer.invoke('session:list-agents'),
     start: (request) => ipcRenderer.invoke('session:start', request),
+  },
+  files: {
+    pathsFor: (files) => files.map((file) => webUtils.getPathForFile(file)).filter((path) => path !== ''),
   },
 };
 

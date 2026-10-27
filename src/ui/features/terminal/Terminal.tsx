@@ -3,6 +3,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { StartSessionResult } from '../../../contracts/api';
+import { formatDroppedPaths } from './dropped-paths';
 
 export interface TerminalSession {
   id: string;
@@ -61,7 +62,24 @@ export function Terminal({ session }: { session: TerminalSession }) {
     session.xterm.focus();
     const observer = new ResizeObserver(() => session.fit.fit());
     observer.observe(element);
-    return () => observer.disconnect();
+
+    const onDragOver = (event: DragEvent): void => {
+      if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+    };
+    // Paste (bracketed when the agent asks for it) types the paths without pressing Enter.
+    const onDrop = (event: DragEvent): void => {
+      event.preventDefault();
+      const paths = window.sandy.files.pathsFor([...(event.dataTransfer?.files ?? [])]);
+      if (paths.length > 0) session.xterm.paste(formatDroppedPaths(paths));
+      session.xterm.focus();
+    };
+    element.addEventListener('dragover', onDragOver);
+    element.addEventListener('drop', onDrop);
+    return () => {
+      observer.disconnect();
+      element.removeEventListener('dragover', onDragOver);
+      element.removeEventListener('drop', onDrop);
+    };
   }, [session]);
 
   return <div ref={container} style={{ flex: 1, minHeight: 0, background: '#000', padding: 4 }} />;
