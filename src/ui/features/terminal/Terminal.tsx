@@ -4,7 +4,8 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
 import { formatDroppedPaths } from './dropped-paths';
-import { type Activity, createActivityTracker } from './session-activity';
+import type { SessionState } from '../sessions/Sidebar';
+import { ACTIVITY_OSC, type Activity, parseActivity } from './session-activity';
 import { currentTerminalTheme, followSystemTheme, terminalFont } from './terminal-theme';
 
 const PASTABLE_IMAGES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -32,6 +33,13 @@ export async function openTerminal(
   });
   const fit = new FitAddon();
   xterm.loadAddon(fit);
+  // Hooks of agents that have them report their state here; the sequence is swallowed, never drawn.
+  const activityOf: { id?: string } = {};
+  xterm.parser.registerOscHandler(ACTIVITY_OSC, (payload) => {
+    const activity = parseActivity(payload);
+    if (activity && activityOf.id !== undefined) onActivity(activityOf.id, activity);
+    return true;
+  });
 
   const started: { id?: string } = {};
   const early: Array<() => void> = [];
@@ -39,19 +47,9 @@ export async function openTerminal(
     if (started.id === undefined) early.push(() => eventId === started.id && deliver());
     else if (eventId === started.id) deliver();
   };
-  // Output right after the user typed or resized is echo or redraw, not the agent working.
-  const ECHO_MS = 300;
-  let lastInputAt = 0;
-  const tracker = createActivityTracker((activity) => started.id !== undefined && onActivity(started.id, activity));
-  const offData = terminal.onData((eventId, data) =>
-    route(eventId, () => {
-      xterm.write(data);
-      if (Date.now() - lastInputAt > ECHO_MS) tracker.touch();
-    }),
-  );
+  const offData = terminal.onData((eventId, data) => route(eventId, () => xterm.write(data)));
   const offExit = terminal.onExit((eventId, exitCode) =>
     route(eventId, () => {
-      tracker.stop();
       offData();
       offExit();
       onExit(eventId, exitCode);
@@ -60,7 +58,6 @@ export async function openTerminal(
 
   const result = await start(xterm.cols, xterm.rows);
   if (!result.ok) {
-    tracker.stop();
     offData();
     offExit();
     offTheme();
@@ -68,18 +65,11 @@ export async function openTerminal(
     return result;
   }
   started.id = result.id;
+  activityOf.id = result.id;
   early.splice(0).forEach((deliver) => deliver());
-  tracker.touch();
-  xterm.onData((data) => {
-    lastInputAt = Date.now();
-    terminal.write(result.id, data);
-  });
-  xterm.onResize(({ cols, rows }) => {
-    lastInputAt = Date.now();
-    terminal.resize(result.id, cols, rows);
-  });
+  xterm.onData((data) => terminal.write(result.id, data));
+  xterm.onResize(({ cols, rows }) => terminal.resize(result.id, cols, rows));
   const dispose = (): void => {
-    tracker.stop();
     offData();
     offExit();
     offTheme();
@@ -95,7 +85,7 @@ interface TerminalProps {
   ended: boolean;
   title: string;
   projectPath: string;
-  state: 'working' | 'waiting' | 'ended';
+  state: SessionState;
   stateText: string;
 }
 

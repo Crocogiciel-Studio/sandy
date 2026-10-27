@@ -14,7 +14,7 @@ function setup(sandboxes: SandboxInfo[]) {
     stop: async () => {},
     remove: async () => {},
     sessionCommand: () => ({ command: 'sbx', args: [] }),
-    attachCommand: (name) => ({ command: 'sbx', args: ['run', '--name', name] }),
+    attachCommand: ({ name }) => ({ command: 'sbx', args: ['run', '--name', name] }),
   };
   const terminal: TerminalProvider = {
     open: async (options) => (opened.push(options), 'terminal-1'),

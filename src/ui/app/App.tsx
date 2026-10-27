@@ -27,7 +27,7 @@ export function App() {
     setRunning((all) => {
       const base = agent;
       const same = all.filter((one) => one.projectPath === projectPath && (one.label === base || one.label.startsWith(`${base} (`))).length;
-      return [...all, { label: same ? `${base} (${same + 1})` : base, projectPath, session: result.session, activity: 'working' }];
+      return [...all, { label: same ? `${base} (${same + 1})` : base, projectPath, session: result.session }];
     });
     setActive(result.session.id);
   }

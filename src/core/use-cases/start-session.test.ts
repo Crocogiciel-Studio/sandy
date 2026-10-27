@@ -10,7 +10,7 @@ const sandbox: SandboxProvider = {
   copyIn: async () => {},
   stop: async () => {},
   remove: async () => {},
-  attachCommand: (name) => ({ command: 'sbx', args: ['run', '--name', name] }),
+  attachCommand: ({ name }) => ({ command: 'sbx', args: ['run', '--name', name] }),
 };
 
 function fakeTerminal(open: (options: TerminalOptions) => Promise<string>): TerminalProvider {

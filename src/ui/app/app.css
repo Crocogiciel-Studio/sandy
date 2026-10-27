@@ -156,12 +156,23 @@ h2 {
   animation: pulse 1.4s ease-in-out infinite;
 }
 
-.dot[data-state='waiting'] {
+.dot[data-state='running'] {
+  background: var(--isolated);
+  border-color: var(--isolated);
+}
+
+.dot[data-state='waiting'],
+.dot[data-state='attention'] {
   background: var(--attention);
   border-color: var(--attention);
 }
 
-.row-state[data-state='waiting'] {
+.dot[data-state='attention'] {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.row-state[data-state='waiting'],
+.row-state[data-state='attention'] {
   color: var(--attention);
   font-weight: 500;
 }
@@ -312,7 +323,8 @@ h2 {
     transition: none;
   }
 
-  .dot[data-state='working'] {
+  .dot[data-state='working'],
+  .dot[data-state='attention'] {
     animation: none;
   }
 }
