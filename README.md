@@ -14,7 +14,7 @@ The builds are not signed with a paid certificate yet, so your OS warns on first
 
 - **macOS**: open the `.dmg`, drag sandy to Applications, then right-click it and choose **Open**. If macOS says the app is damaged, run `xattr -dr com.apple.quarantine /Applications/sandy.app`.
 - **Windows**: in the SmartScreen dialog, click **More info**, then **Run anyway**.
-- **Linux**: `chmod +x sandy-*.AppImage && ./sandy-*.AppImage`, or install the `.deb`.
+- **Linux**: `chmod +x sandy-*.AppImage && ./sandy-*.AppImage`.
 
 ## Develop
 
