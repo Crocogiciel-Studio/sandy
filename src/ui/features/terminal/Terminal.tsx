@@ -12,13 +12,15 @@ export interface TerminalSession {
   id: string;
   xterm: XTerm;
   fit: FitAddon;
+  // Stops listening to the PTY and frees the xterm; the PTY itself is closed separately.
+  dispose(): void;
 }
 
 // Starts a session and wires it to a fresh xterm before any output can be missed.
 // The xterm lives outside React so StrictMode remounts do not lose output.
 export async function openTerminal(
   start: (cols: number, rows: number) => Promise<StartSessionResult>,
-  onExit: (exitCode: number) => void,
+  onExit: (id: string, exitCode: number) => void,
 ): Promise<{ ok: true; session: TerminalSession } | { ok: false; message: string }> {
   const { terminal } = window.sandy;
   const xterm = new XTerm({ cursorBlink: true, fontFamily: 'Menlo, Consolas, "DejaVu Sans Mono", monospace' });
@@ -36,7 +38,7 @@ export async function openTerminal(
     route(eventId, () => {
       offData();
       offExit();
-      onExit(exitCode);
+      onExit(eventId, exitCode);
     }),
   );
 
@@ -51,10 +53,16 @@ export async function openTerminal(
   early.splice(0).forEach((deliver) => deliver());
   xterm.onData((data) => terminal.write(result.id, data));
   xterm.onResize(({ cols, rows }) => terminal.resize(result.id, cols, rows));
-  return { ok: true, session: { id: result.id, xterm, fit } };
+  const dispose = (): void => {
+    offData();
+    offExit();
+    xterm.dispose();
+  };
+  return { ok: true, session: { id: result.id, xterm, fit, dispose } };
 }
 
-export function Terminal({ session }: { session: TerminalSession }) {
+// Stays mounted while hidden (display: none) so switching sessions never clears or cuts one.
+export function Terminal({ session, visible }: { session: TerminalSession; visible: boolean }) {
   const container = useRef<HTMLDivElement>(null);
   const [dropError, setDropError] = useState<string>();
 
@@ -63,7 +71,6 @@ export function Terminal({ session }: { session: TerminalSession }) {
     if (!element) return;
     if (!session.xterm.element) session.xterm.open(element);
     session.fit.fit();
-    session.xterm.focus();
     const observer = new ResizeObserver(() => session.fit.fit());
     observer.observe(element);
 
@@ -112,14 +119,20 @@ export function Terminal({ session }: { session: TerminalSession }) {
     };
   }, [session]);
 
+  useEffect(() => {
+    if (!visible) return;
+    session.fit.fit();
+    session.xterm.focus();
+  }, [session, visible]);
+
   return (
-    <>
+    <div style={{ display: visible ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <div ref={container} style={{ flex: 1, minHeight: 0, background: '#000', padding: 4 }} />
       {dropError && (
         <p role="alert" style={{ margin: 0, padding: '4px 16px', color: '#b00020' }}>
           {dropError}
         </p>
       )}
-    </>
+    </div>
   );
 }
