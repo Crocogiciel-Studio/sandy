@@ -91,4 +91,34 @@ describe('SbxSandboxProvider', () => {
       await expect(failing(undefined).checkInstall()).rejects.toThrow('boom');
     });
   });
+
+  describe('checkSignIn', () => {
+    it('reads the Authentication check of sbx diagnose --json', async () => {
+      const calls: string[][] = [];
+      const signedIn = new SbxSandboxProvider(async (args) => (calls.push(args), '{"checks":[{"name":"Authentication","status":"pass"}]}'));
+
+      expect(await signedIn.checkSignIn()).toBe('signed-in');
+      expect(calls).toEqual([['diagnose', '--json']]);
+    });
+
+    it('still reads the report when diagnose exits non-zero', async () => {
+      const failing = new SbxSandboxProvider(async () => {
+        throw Object.assign(new Error('sbx diagnose a échoué'), { stdout: '{"checks":[{"name":"Authentication","status":"fail"}]}' });
+      });
+
+      expect(await failing.checkSignIn()).toBe('signed-out');
+    });
+
+    it('is unknown, never a rejection, when diagnose gives nothing to read', async () => {
+      const broken = new SbxSandboxProvider(async () => {
+        throw new Error('sbx diagnose a échoué');
+      });
+
+      expect(await broken.checkSignIn()).toBe('unknown');
+    });
+  });
+
+  it('signs in with sbx login', () => {
+    expect(provider.signInCommand()).toEqual({ command: 'sbx', args: ['login'] });
+  });
 });

@@ -74,8 +74,14 @@ export type SbxStatus =
 // Docker's install instructions for sbx. The shell opens this fixed address; the renderer never supplies one.
 export const SBX_INSTALL_URL = 'https://docs.docker.com/ai/sandboxes/install/';
 
+// Whether sbx is signed in to Docker. `unknown`: sbx could not tell, so sandy does not block on it.
+export type SignInState = 'signed-in' | 'signed-out' | 'unknown';
+
 export interface SbxApi {
   check(): Promise<SbxStatus>;
+  checkSignIn(): Promise<SignInState>;
+  // Opens a terminal on `sbx login` (browser OAuth); resolves with its id, closed like any session terminal.
+  signIn(cols: number, rows: number): Promise<StartSessionResult>;
   // Opens SBX_INSTALL_URL in the browser.
   openInstallGuide(): Promise<void>;
   // The host OS (Node's process.platform), which picks the install instructions.
