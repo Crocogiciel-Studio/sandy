@@ -71,13 +71,13 @@ export type SbxStatus =
   | { status: 'outdated'; version: string; minimum: string }
   | { status: 'error'; message: string };
 
-// Where the user downloads sbx. The shell opens this fixed address; the renderer never supplies one.
-export const SBX_RELEASES_URL = 'https://github.com/docker/sbx-releases/releases';
+// Docker's install instructions for sbx. The shell opens this fixed address; the renderer never supplies one.
+export const SBX_INSTALL_URL = 'https://docs.docker.com/ai/sandboxes/install/';
 
 export interface SbxApi {
   check(): Promise<SbxStatus>;
-  // Opens SBX_RELEASES_URL in the browser.
-  openReleases(): Promise<void>;
+  // Opens SBX_INSTALL_URL in the browser.
+  openInstallGuide(): Promise<void>;
   // The host OS (Node's process.platform), which picks the install instructions.
   platform: string;
 }

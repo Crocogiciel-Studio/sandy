@@ -25,8 +25,8 @@ export function SbxSetup({ status, checking, onRecheck }: SbxSetupProps) {
         ))}
       </ol>
       <div className="setup-actions">
-        <button type="button" className="primary" onClick={() => void sbx.openReleases()}>
-          Ouvrir la page de téléchargement
+        <button type="button" className="primary" onClick={() => void sbx.openInstallGuide()}>
+          Ouvrir les instructions d’installation
         </button>
         <button type="button" onClick={onRecheck} disabled={checking}>
           Revérifier

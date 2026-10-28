@@ -28,7 +28,7 @@ const api: SandyApi = {
   },
   sbx: {
     check: () => ipcRenderer.invoke('sbx:check'),
-    openReleases: () => ipcRenderer.invoke('sbx:open-releases'),
+    openInstallGuide: () => ipcRenderer.invoke('sbx:open-install-guide'),
     platform: process.platform,
   },
   files: {
