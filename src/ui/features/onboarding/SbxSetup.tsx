@@ -1,4 +1,5 @@
 import type { SbxStatus } from '../../../contracts/api';
+import { CodeBlock } from './CodeBlock';
 import { installGuide } from './install-guide';
 import { sbxProblem } from './sbx-message';
 
@@ -21,7 +22,10 @@ export function SbxSetup({ status, checking, onRecheck }: SbxSetupProps) {
       <p>Instructions pour {guide.os}</p>
       <ol>
         {guide.steps.map((step) => (
-          <li key={step}>{step}</li>
+          <li key={step.text}>
+            {step.text}
+            {step.command && <CodeBlock code={step.command} />}
+          </li>
         ))}
       </ol>
       <div className="setup-actions">

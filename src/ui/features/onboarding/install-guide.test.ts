@@ -16,9 +16,15 @@ describe('installGuide', () => {
     expect(installGuide('freebsd').os).toBe('Linux');
   });
 
+  it('keeps commands out of the sentences', () => {
+    const commands = installGuide('darwin').steps.flatMap((step) => (step.command ? [step.command] : []));
+    expect(commands).toEqual(['brew trust docker/tap\nbrew install docker/tap/sbx']);
+    expect(installGuide('win32').steps[0]?.command).toBe('winget install -h Docker.sbx');
+  });
+
   it('ends every guide by saying the check restarts by itself', () => {
     for (const platform of ['darwin', 'win32', 'linux']) {
-      expect(installGuide(platform).steps.at(-1)).toContain('vérification');
+      expect(installGuide(platform).steps.at(-1)?.text).toContain('vérification');
     }
   });
 });
