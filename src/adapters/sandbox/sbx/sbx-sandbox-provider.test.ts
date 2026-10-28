@@ -109,6 +109,18 @@ describe('SbxSandboxProvider', () => {
       expect(await failing.checkSignIn()).toBe('signed-out');
     });
 
+    it('asks sbx ls when diagnose skips Authentication because the daemon is down', async () => {
+      const skipped = '{"checks":[{"name":"Daemon","status":"fail"},{"name":"Authentication","status":"skip"}]}';
+      const signedOut = new SbxSandboxProvider(async (args) => {
+        if (args[0] === 'diagnose') return skipped;
+        throw new Error('sbx ls a échoué : try: sbx login');
+      });
+      const signedIn = new SbxSandboxProvider(async (args) => (args[0] === 'diagnose' ? skipped : '[]'));
+
+      expect(await signedOut.checkSignIn()).toBe('signed-out');
+      expect(await signedIn.checkSignIn()).toBe('signed-in');
+    });
+
     it('is unknown, never a rejection, when diagnose gives nothing to read', async () => {
       const broken = new SbxSandboxProvider(async () => {
         throw new Error('sbx diagnose a échoué');
