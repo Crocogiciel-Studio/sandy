@@ -313,6 +313,49 @@ h2 {
   color: var(--text-muted);
 }
 
+.setup {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  width: min(480px, 100%);
+  box-sizing: border-box;
+  padding: 48px 24px;
+  margin: 0 auto;
+}
+
+.setup h1 {
+  font-size: 18px;
+}
+
+.setup p,
+.setup ol {
+  margin: 0;
+}
+
+.setup ol {
+  padding-left: 20px;
+}
+
+.setup-problem {
+  color: var(--attention);
+}
+
+.setup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.setup button {
+  border-color: var(--line);
+}
+
+.setup .primary {
+  background: var(--isolated);
+  border-color: var(--isolated);
+  color: var(--bg);
+  font-weight: 600;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .terminal {
     transition: none;
