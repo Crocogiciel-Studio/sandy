@@ -28,6 +28,8 @@ const api: SandyApi = {
   },
   sbx: {
     check: () => ipcRenderer.invoke('sbx:check'),
+    checkSignIn: () => ipcRenderer.invoke('sbx:check-sign-in'),
+    signIn: (cols, rows) => ipcRenderer.invoke('sbx:sign-in', cols, rows),
     openInstallGuide: () => ipcRenderer.invoke('sbx:open-install-guide'),
     platform: process.platform,
   },
