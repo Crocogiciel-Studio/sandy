@@ -4,6 +4,7 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
 import { formatDroppedPaths } from './dropped-paths';
+import { listContinuationFor } from './list-continuation';
 import { newlineInputFor } from './newline-key';
 import type { SessionState } from '../sessions/Sidebar';
 import { ACTIVITY_OSC, type Activity, parseActivity } from './session-activity';
@@ -74,7 +75,9 @@ export async function openTerminal(
     const newline = newlineInputFor(event);
     if (newline === undefined) return true;
     event.preventDefault();
-    terminal.write(result.id, newline);
+    const buffer = xterm.buffer.active;
+    const row = buffer.getLine(buffer.baseY + buffer.cursorY)?.translateToString(true) ?? '';
+    terminal.write(result.id, listContinuationFor(row, buffer.cursorX) ?? newline);
     return false;
   });
   xterm.onResize(({ cols, rows }) => terminal.resize(result.id, cols, rows));
