@@ -13,6 +13,8 @@ export interface SandboxInfo {
 }
 
 export interface SandboxProvider {
+  // The installed sbx version, or undefined when sbx is not installed. Rejects when sbx cannot report it.
+  checkInstall(): Promise<{ version: string } | undefined>;
   listAgents(): readonly string[];
   // Rejects when sandboxes cannot be listed (sbx missing, not signed in...).
   list(): Promise<SandboxInfo[]>;

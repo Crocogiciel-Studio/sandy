@@ -2,6 +2,7 @@
 export interface SandyApi {
   terminal: TerminalApi;
   session: SessionApi;
+  sbx: SbxApi;
   files: FilesApi;
 }
 
@@ -62,3 +63,14 @@ export interface AttachSessionRequest {
 }
 
 export type ActionResult = { ok: true } | { ok: false; message: string };
+
+// Whether the `sbx` CLI can be used, apart from sign-in. `error`: sbx is there but would not report its version.
+export type SbxStatus =
+  | { status: 'ok'; version: string }
+  | { status: 'missing' }
+  | { status: 'outdated'; version: string; minimum: string }
+  | { status: 'error'; message: string };
+
+export interface SbxApi {
+  check(): Promise<SbxStatus>;
+}

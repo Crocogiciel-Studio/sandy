@@ -9,6 +9,7 @@ function setup(sandboxes: SandboxInfo[]) {
   const opened: TerminalOptions[] = [];
   const sandbox: SandboxProvider = {
     listAgents: () => [],
+    checkInstall: async () => ({ version: '0.49.2' }),
     list: async () => sandboxes,
     copyIn: async () => {},
     stop: async () => {},

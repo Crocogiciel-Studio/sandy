@@ -5,6 +5,7 @@ import { startSession } from './start-session';
 
 const sandbox: SandboxProvider = {
   listAgents: () => ['claude'],
+  checkInstall: async () => ({ version: '0.49.2' }),
   sessionCommand: ({ agent, projectPath, name }) => ({ command: 'sbx', args: ['run', agent, projectPath, '--name', name] }),
   list: async () => [],
   copyIn: async () => {},

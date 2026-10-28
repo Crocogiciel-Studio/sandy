@@ -64,4 +64,31 @@ describe('SbxSandboxProvider', () => {
 
     expect(calls).toEqual([['stop', 'claude-app'], ['rm', '-f', 'claude-app']]);
   });
+
+  describe('checkInstall', () => {
+    const failing = (code: string | undefined) =>
+      new SbxSandboxProvider(async () => {
+        throw Object.assign(new Error('sbx version a échoué : boom'), { code });
+      });
+
+    it('reads the version from sbx version --json', async () => {
+      const calls: string[][] = [];
+      const checking = new SbxSandboxProvider(async (args) => (calls.push(args), '{"client":{"version":"v0.49.2"}}'));
+
+      expect(await checking.checkInstall()).toEqual({ version: '0.49.2' });
+      expect(calls).toEqual([['version', '--json']]);
+    });
+
+    it('is undefined when sbx is not installed', async () => {
+      expect(await failing('ENOENT').checkInstall()).toBeUndefined();
+    });
+
+    it('is undefined when the output has no version', async () => {
+      expect(await new SbxSandboxProvider(async () => '{}').checkInstall()).toBeUndefined();
+    });
+
+    it('rejects when sbx is there but fails', async () => {
+      await expect(failing(undefined).checkInstall()).rejects.toThrow('boom');
+    });
+  });
 });
