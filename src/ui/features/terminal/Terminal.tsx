@@ -4,6 +4,7 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
 import { formatDroppedPaths } from './dropped-paths';
+import { newlineInputFor } from './newline-key';
 import type { SessionState } from '../sessions/Sidebar';
 import { ACTIVITY_OSC, type Activity, parseActivity } from './session-activity';
 import { currentTerminalTheme, followSystemTheme, terminalFont } from './terminal-theme';
@@ -68,6 +69,14 @@ export async function openTerminal(
   activityOf.id = result.id;
   early.splice(0).forEach((deliver) => deliver());
   xterm.onData((data) => terminal.write(result.id, data));
+  // Cmd/Ctrl/Shift+Enter inserts a newline instead of submitting; xterm alone cannot tell them apart.
+  xterm.attachCustomKeyEventHandler((event) => {
+    const newline = newlineInputFor(event);
+    if (newline === undefined) return true;
+    event.preventDefault();
+    terminal.write(result.id, newline);
+    return false;
+  });
   xterm.onResize(({ cols, rows }) => terminal.resize(result.id, cols, rows));
   const dispose = (): void => {
     offData();
