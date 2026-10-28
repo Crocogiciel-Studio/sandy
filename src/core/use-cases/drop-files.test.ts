@@ -6,6 +6,7 @@ function fakeSandbox(fail = false) {
   const copies: Array<{ sandboxName: string; hostPath: string; sandboxPath: string }> = [];
   const sandbox: SandboxProvider = {
     listAgents: () => [],
+    checkInstall: async () => ({ version: '0.49.2' }),
     list: async () => [],
     stop: async () => {},
     remove: async () => {},

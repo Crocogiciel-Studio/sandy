@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { app, BrowserWindow } from 'electron';
 import { SbxSandboxProvider } from '../../adapters/sandbox/sbx/sbx-sandbox-provider';
 import { NodePtyTerminal } from '../../adapters/terminal/node-pty/node-pty-terminal';
+import { registerSbxIpc } from './ipc/sbx';
 import { registerSessionIpc } from './ipc/session';
 import { registerTerminalIpc } from './ipc/terminal';
 
@@ -34,7 +35,9 @@ function createWindow(terminal: NodePtyTerminal): void {
 void app.whenReady().then(() => {
   const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'));
   registerTerminalIpc(terminal);
-  registerSessionIpc({ sandbox: new SbxSandboxProvider(), terminal });
+  const sandbox = new SbxSandboxProvider();
+  registerSbxIpc({ sandbox });
+  registerSessionIpc({ sandbox, terminal });
   createWindow(terminal);
 
   app.on('before-quit', () => terminal.dispose());

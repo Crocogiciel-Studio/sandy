@@ -4,6 +4,7 @@ import type { SandboxInfo, SandboxProvider, SessionCommand } from '../../../core
 import { searchDirs } from '../../../pty-host/search-dirs';
 import { agentArgs } from './agent-hooks';
 import { parseSandboxList } from './sbx-list';
+import { parseSbxVersionOutput } from './sbx-version';
 
 // Built-in agents listed by `sbx run --help` (latest observed); sbx exposes no JSON list.
 const AGENTS = ['claude', 'codex', 'copilot', 'cursor', 'devin', 'docker-agent', 'droid', 'gemini', 'kiro', 'opencode', 'shell'] as const;
@@ -21,7 +22,8 @@ const runSbx: RunSbx = (args) =>
     execFile('sbx', args, { env, timeout: SBX_TIMEOUT_MS }, (error, stdout, stderr) => {
       if (!error) return resolve(stdout);
       const reason = stderr.trim().split('\n').pop() || error.message;
-      reject(new Error(`sbx ${args[0]} a échoué : ${reason}`));
+      // The code survives so a missing binary (ENOENT) can be told apart from a failing one.
+      reject(Object.assign(new Error(`sbx ${args[0]} a échoué : ${reason}`), { code: (error as NodeJS.ErrnoException).code }));
     });
   });
 
@@ -30,6 +32,18 @@ export class SbxSandboxProvider implements SandboxProvider {
 
   listAgents(): readonly string[] {
     return AGENTS;
+  }
+
+  async checkInstall(): Promise<{ version: string } | undefined> {
+    let output: string;
+    try {
+      output = await this.run(['version', '--json']);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+      throw error;
+    }
+    const version = parseSbxVersionOutput(output);
+    return version ? { version } : undefined;
   }
 
   sessionCommand({ agent, projectPath, name }: { agent: string; projectPath: string; name: string }): SessionCommand {

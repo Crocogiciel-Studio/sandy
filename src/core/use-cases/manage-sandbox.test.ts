@@ -6,6 +6,7 @@ function setup() {
   const calls: string[] = [];
   const sandbox: SandboxProvider = {
     listAgents: () => [],
+    checkInstall: async () => ({ version: '0.49.2' }),
     list: async () => [{ name: 'claude-app', agent: 'claude', status: 'running', workspaces: ['/work/app'] }],
     copyIn: async () => {},
     sessionCommand: () => ({ command: 'sbx', args: [] }),
