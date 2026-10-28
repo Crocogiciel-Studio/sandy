@@ -3,11 +3,21 @@ import { useState } from 'react';
 import type { SandboxSummary, StartSessionResult } from '../../contracts/api';
 import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSession';
 import { Sidebar, STATE_TEXT, sessionState, type OpenSession } from '../features/sessions/Sidebar';
+import { SbxSetup } from '../features/onboarding/SbxSetup';
+import { useSbxStatus } from '../features/onboarding/use-sbx-status';
 import { openTerminal, Terminal } from '../features/terminal/Terminal';
 
 const NEW = 'new';
 
+// Nothing else works without a usable sbx: the setup screen stands in until it is.
 export function App() {
+  const { status, checking, recheck } = useSbxStatus();
+  if (!status) return null;
+  if (status.status !== 'ok') return <SbxSetup status={status} checking={checking} onRecheck={recheck} />;
+  return <Sessions />;
+}
+
+function Sessions() {
   const [running, setRunning] = useState<OpenSession[]>([]);
   const [active, setActive] = useState<string>(NEW);
   const [error, setError] = useState<string>();

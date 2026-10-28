@@ -28,6 +28,8 @@ const api: SandyApi = {
   },
   sbx: {
     check: () => ipcRenderer.invoke('sbx:check'),
+    openInstallGuide: () => ipcRenderer.invoke('sbx:open-install-guide'),
+    platform: process.platform,
   },
   files: {
     pathsFor: (files) => files.map((file) => webUtils.getPathForFile(file)).filter((path) => path !== ''),
