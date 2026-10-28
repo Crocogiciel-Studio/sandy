@@ -53,11 +53,27 @@ export class SbxSandboxProvider implements SandboxProvider {
   }
 
   async checkSignIn(): Promise<SignInState> {
+    const reported = await this.diagnoseSignIn();
+    return reported === 'unknown' ? this.probeSignIn() : reported;
+  }
+
+  private async diagnoseSignIn(): Promise<SignInState> {
     try {
       return parseSignIn(await this.run(['diagnose', '--json']));
     } catch (error) {
       const { stdout } = error as { stdout?: unknown };
       return typeof stdout === 'string' ? parseSignIn(stdout) : 'unknown';
+    }
+  }
+
+  // Signed out, the daemon is down and diagnose skips its Authentication check (observed on v0.49.2):
+  // `ls` then decides, since it fails with "try: sbx login" only when signed out.
+  private async probeSignIn(): Promise<SignInState> {
+    try {
+      await this.run(['ls', '--json']);
+      return 'signed-in';
+    } catch (error) {
+      return error instanceof Error && error.message.includes('sbx login') ? 'signed-out' : 'unknown';
     }
   }
 
