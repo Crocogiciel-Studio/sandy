@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Runs `check` when enabled, then again each time the window regains focus until `done` accepts the result,
-// so fixing the problem in another window unblocks sandy without a restart. Undefined while the first check runs.
+// Runs `check` when enabled, then again each time the window regains focus (and every `pollMs`, if given) until
+// `done` accepts the result, so fixing the problem in another window unblocks sandy without a restart. Undefined while the first check runs.
 // `check` must not reject (turn failures into a value) and must keep the same identity between renders.
 export function useRecheck<T>(
   check: () => Promise<T>,
   done: (value: T) => boolean,
   enabled = true,
+  pollMs?: number,
 ): { value: T | undefined; checking: boolean; recheck(): void } {
   const [value, setValue] = useState<T>();
   const [checking, setChecking] = useState(false);
@@ -31,8 +32,12 @@ export function useRecheck<T>(
   useEffect(() => {
     if (!enabled || finished) return;
     window.addEventListener('focus', recheck);
-    return () => window.removeEventListener('focus', recheck);
-  }, [enabled, finished, recheck]);
+    const timer = pollMs ? window.setInterval(recheck, pollMs) : undefined;
+    return () => {
+      window.removeEventListener('focus', recheck);
+      window.clearInterval(timer);
+    };
+  }, [enabled, finished, recheck, pollMs]);
 
   return { value, checking, recheck };
 }
