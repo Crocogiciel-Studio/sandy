@@ -37,8 +37,8 @@ export function CodeBlock({ code }: { code: string }) {
           ))}
         </code>
       </pre>
-      <button type="button" className="code-copy" onClick={() => void copyCode()} aria-label="Copier la commande">
-        {copy === 'copied' ? 'Copié' : copy === 'failed' ? 'Copie impossible' : 'Copier'}
+      <button type="button" className="code-copy" onClick={() => void copyCode()} aria-label="Copy the command">
+        {copy === 'copied' ? 'Copied' : copy === 'failed' ? 'Copy failed' : 'Copy'}
       </button>
     </div>
   );

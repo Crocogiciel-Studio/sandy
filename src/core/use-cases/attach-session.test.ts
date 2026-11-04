@@ -43,7 +43,7 @@ describe('attachSession', () => {
   it('rejects an unknown sandbox without opening a terminal', async () => {
     const { deps, opened } = setup([existing]);
 
-    await expect(attachSession(deps, { name: 'nope', cols: 80, rows: 24 })).rejects.toThrow('introuvable');
+    await expect(attachSession(deps, { name: 'nope', cols: 80, rows: 24 })).rejects.toThrow('not found');
     expect(opened).toEqual([]);
   });
 
@@ -56,7 +56,7 @@ describe('attachSession', () => {
   it('rejects an invalid name and a sandbox without workspace', async () => {
     const { deps } = setup([{ ...existing, workspaces: [] }]);
 
-    await expect(attachSession(deps, { name: '--help', cols: 80, rows: 24 })).rejects.toThrow('invalide');
+    await expect(attachSession(deps, { name: '--help', cols: 80, rows: 24 })).rejects.toThrow('Invalid');
     await expect(attachSession(deps, { name: 'claude-app', cols: 80, rows: 24 })).rejects.toThrow('workspace');
   });
 });

@@ -33,7 +33,7 @@ describe('parseSandboxList', () => {
 
   it('accepts an empty list and rejects anything but an array', () => {
     expect(parseSandboxList('[]')).toEqual([]);
-    expect(() => parseSandboxList('{}')).toThrow('tableau');
-    expect(() => parseSandboxList('')).toThrow('illisible');
+    expect(() => parseSandboxList('{}')).toThrow('expected an array');
+    expect(() => parseSandboxList('')).toThrow('unreadable');
   });
 });

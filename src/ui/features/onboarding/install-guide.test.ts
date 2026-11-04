@@ -24,7 +24,7 @@ describe('installGuide', () => {
 
   it('ends every guide by saying the check restarts by itself', () => {
     for (const platform of ['darwin', 'win32', 'linux']) {
-      expect(installGuide(platform).steps.at(-1)?.text).toContain('vérification');
+      expect(installGuide(platform).steps.at(-1)?.text).toContain('check');
     }
   });
 });

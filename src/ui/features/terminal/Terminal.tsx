@@ -149,7 +149,7 @@ export function Terminal({ session, visible, ended, title, provisional, projectP
       if (event.clipboardData?.getData('text/plain')) return;
       const image = [...(event.clipboardData?.files ?? [])].find((file) => PASTABLE_IMAGES.includes(file.type));
       if (!image) return;
-      if (image.size > MAX_IMAGE_BYTES) return setDropError('Image trop lourde (20 Mo maximum).');
+      if (image.size > MAX_IMAGE_BYTES) return setDropError('Image too large (20 MB maximum).');
       event.preventDefault();
       event.stopPropagation();
       deliver(image.arrayBuffer().then((bytes) => window.sandy.session.pasteImage(session.id, bytes, image.type)));

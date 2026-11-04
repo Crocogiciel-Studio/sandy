@@ -32,7 +32,7 @@ const runSbx: RunSbx = (args) =>
       const reason = stderr.trim().split('\n').pop() || error.message;
       // The code survives so a missing binary (ENOENT) can be told apart from a failing one.
       // `stdout` too, in case `diagnose` exits non-zero when a check fails (not observed yet) but still prints its report.
-      reject(Object.assign(new Error(`sbx ${args[0]} a échoué : ${reason}`), { code: (error as NodeJS.ErrnoException).code, stdout }));
+      reject(Object.assign(new Error(`sbx ${args[0]} failed: ${reason}`), { code: (error as NodeJS.ErrnoException).code, stdout }));
     });
   });
 

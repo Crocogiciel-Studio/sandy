@@ -9,8 +9,8 @@ export interface InstallGuide {
   steps: InstallStep[];
 }
 
-const DETAILS: InstallStep = { text: 'Les prérequis et les autres méthodes sont sur la page d’instructions de Docker.' };
-const BACK: InstallStep = { text: 'Revenez sur sandy : la vérification se relance toute seule.' };
+const DETAILS: InstallStep = { text: 'Prerequisites and other methods are on Docker’s install page.' };
+const BACK: InstallStep = { text: 'Come back to sandy: the check reruns by itself.' };
 
 // Short, OS-specific steps to install sbx by hand: sandy never runs an installer itself.
 // Commands follow https://docs.docker.com/ai/sandboxes/install/ (read 2026-10-28); sbx moves fast, so
@@ -22,7 +22,7 @@ export function installGuide(platform: string): InstallGuide {
         os: 'macOS',
         steps: [
           {
-            text: 'Avec Homebrew, sur un Mac Apple silicon (macOS 14 ou plus récent) :',
+            text: 'With Homebrew, on an Apple silicon Mac (macOS 14 or newer):',
             command: 'brew trust docker/tap\nbrew install docker/tap/sbx',
           },
           DETAILS,
@@ -32,14 +32,14 @@ export function installGuide(platform: string): InstallGuide {
     case 'win32':
       return {
         os: 'Windows',
-        steps: [{ text: 'Sous Windows 11, dans un terminal :', command: 'winget install -h Docker.sbx' }, DETAILS, BACK],
+        steps: [{ text: 'On Windows 11, in a terminal:', command: 'winget install -h Docker.sbx' }, DETAILS, BACK],
       };
     default:
       return {
         os: 'Linux',
         steps: [
-          { text: 'Sur Ubuntu 24.04 ou plus récent, suivez la procédure « sbx seul » de la page d’instructions de Docker (dépôt Docker puis apt install docker-sbx).' },
-          { text: 'KVM doit être activé et votre utilisateur dans le groupe kvm.', command: 'sudo usermod -aG kvm $USER' },
+          { text: 'On Ubuntu 24.04 or newer, follow the “sbx only” procedure on Docker’s install page (Docker repository, then apt install docker-sbx).' },
+          { text: 'KVM must be enabled and your user in the kvm group.', command: 'sudo usermod -aG kvm $USER' },
           BACK,
         ],
       };

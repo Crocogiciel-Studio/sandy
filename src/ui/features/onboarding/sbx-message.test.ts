@@ -7,7 +7,7 @@ describe('sbxProblem', () => {
   });
 
   it('says sbx is missing', () => {
-    expect(sbxProblem({ status: 'missing' })).toContain('introuvable');
+    expect(sbxProblem({ status: 'missing' })).toContain('not found');
   });
 
   it('names the version found and the minimum when sbx is too old', () => {

@@ -18,8 +18,8 @@ export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onA
   return (
     <section className="project-page">
       <h1 title={project.path || undefined}>{project.name}</h1>
-      <h2>Sessions en cours</h2>
-      {project.sessions.length === 0 && <p className="empty">Aucune session ouverte.</p>}
+      <h2>Running sessions</h2>
+      {project.sessions.length === 0 && <p className="empty">No open sessions.</p>}
       <ul>
         {project.sessions.map((one) => {
           const state = sessionState(one);
@@ -35,8 +35,8 @@ export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onA
                 </span>
               </button>
               <span className="actions">
-                <button type="button" aria-label={`Fermer ${displayName(one)}`} onClick={() => onClose(one)}>
-                  Fermer
+                <button type="button" aria-label={`Close ${displayName(one)}`} onClick={() => onClose(one)}>
+                  Close
                 </button>
               </span>
             </li>
@@ -46,10 +46,10 @@ export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onA
       <h2>
         Sandboxes
         <button type="button" className="quiet" onClick={() => void refresh()}>
-          Actualiser
+          Refresh
         </button>
       </h2>
-      {project.sandboxes.length === 0 && <p className="empty">Aucune sandbox pour ce projet.</p>}
+      {project.sandboxes.length === 0 && <p className="empty">No sandbox for this project.</p>}
       <ul>
         {project.sandboxes.map((sandbox) => (
           <li key={sandbox.name} className="row">
@@ -66,13 +66,13 @@ export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onA
             </button>
             <span className="actions">
               <button type="button" disabled={busy !== undefined || sandbox.workspaces.length === 0} onClick={() => void whileBusy(sandbox, () => onAttach(sandbox))}>
-                Nouvelle session
+                New session
               </button>
               <button type="button" disabled={busy !== undefined || sandbox.status !== 'running'} onClick={() => void stop(sandbox)}>
-                Arrêter
+                Stop
               </button>
               <button type="button" disabled={busy !== undefined} onClick={() => void remove(sandbox)}>
-                Supprimer
+                Delete
               </button>
             </span>
           </li>
@@ -80,7 +80,7 @@ export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onA
       </ul>
       {project.path && (
         <button type="button" className="project-new" onClick={() => onNewSandbox(project.path)}>
-          Nouvelle sandbox
+          New sandbox
         </button>
       )}
     </section>

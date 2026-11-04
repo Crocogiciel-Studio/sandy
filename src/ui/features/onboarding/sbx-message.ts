@@ -6,10 +6,10 @@ export function sbxProblem(status: SbxStatus): string | undefined {
     case 'ok':
       return undefined;
     case 'missing':
-      return 'sbx est introuvable sur cette machine.';
+      return 'sbx was not found on this machine.';
     case 'outdated':
-      return `sbx ${status.version} est trop ancien (minimum ${status.minimum}).`;
+      return `sbx ${status.version} is too old (minimum ${status.minimum}).`;
     case 'error':
-      return `sbx est installé mais ne répond pas : ${status.message}`;
+      return `sbx is installed but not responding: ${status.message}`;
   }
 }

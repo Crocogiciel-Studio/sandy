@@ -9,7 +9,7 @@ export interface Project {
   sandboxes: SandboxSummary[];
 }
 
-export const OTHER_PROJECT_NAME = 'Autres';
+export const OTHER_PROJECT_NAME = 'Others';
 
 export function projectName(projectPath: string): string {
   return projectPath.split(/[\\/]/).filter(Boolean).pop() ?? projectPath;
