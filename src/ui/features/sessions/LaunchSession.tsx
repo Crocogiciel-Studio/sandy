@@ -49,7 +49,7 @@ export function LaunchSession({
         void launch();
       }}
     >
-      <h1>Nouvelle session</h1>
+      <h1>Nouvelle sandbox</h1>
       <label htmlFor="project">Projet</label>
       <input id="project" value={projectPath} readOnly placeholder="Aucun dossier choisi" />
       <button type="button" onClick={() => void pickProject()}>

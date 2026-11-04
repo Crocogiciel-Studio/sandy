@@ -11,6 +11,10 @@ describe('sessionName', () => {
     expect(sessionName('claude', '/home/me/app')).toBe(sessionName('claude', '/home/me/app'));
   });
 
+  it('adds a suffix for a new sandbox on the same folder', () => {
+    expect(sessionName('claude', '/srv/app', 'ab12cd')).toBe(`${sessionName('claude', '/srv/app')}-ab12cd`);
+  });
+
   it('separates same-named folders at different paths', () => {
     expect(sessionName('claude', '/home/me/a/app')).not.toBe(sessionName('claude', '/home/me/b/app'));
   });

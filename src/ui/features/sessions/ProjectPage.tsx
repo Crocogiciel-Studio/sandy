@@ -10,10 +10,10 @@ interface Props {
   onSelect: (id: string) => void;
   onClose: (session: OpenSession) => void;
   onAttach: (sandbox: SandboxSummary) => Promise<void>;
-  onNewSession: (projectPath: string) => void;
+  onNewSandbox: (projectPath: string) => void;
 }
 
-export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onAttach, onNewSession }: Props) {
+export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onAttach, onNewSandbox }: Props) {
   const { busy, refresh, stop, remove, whileBusy } = sandboxes;
   return (
     <section className="project-page">
@@ -65,6 +65,9 @@ export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onA
               <span className="row-state">{sandbox.agent}</span>
             </button>
             <span className="actions">
+              <button type="button" disabled={busy !== undefined || sandbox.workspaces.length === 0} onClick={() => void whileBusy(sandbox, () => onAttach(sandbox))}>
+                Nouvelle session
+              </button>
               <button type="button" disabled={busy !== undefined || sandbox.status !== 'running'} onClick={() => void stop(sandbox)}>
                 Arrêter
               </button>
@@ -76,8 +79,8 @@ export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onA
         ))}
       </ul>
       {project.path && (
-        <button type="button" className="project-new" onClick={() => onNewSession(project.path)}>
-          Nouvelle session
+        <button type="button" className="project-new" onClick={() => onNewSandbox(project.path)}>
+          Nouvelle sandbox
         </button>
       )}
     </section>

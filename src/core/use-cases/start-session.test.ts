@@ -52,6 +52,18 @@ describe('startSession', () => {
     ]);
   });
 
+  it('names the sandbox with the suffix when given', async () => {
+    const opened: TerminalOptions[] = [];
+    const terminal = fakeTerminal(async (options) => {
+      opened.push(options);
+      return 'term-2';
+    });
+
+    await startSession({ sandbox, terminal }, { agent: 'claude', projectPath: '/srv/app', cols: 80, rows: 24, suffix: 'ab12cd' });
+
+    expect(opened[0]?.args.at(-1)).toMatch(/^claude-app-[0-9a-f]{6}-ab12cd$/);
+  });
+
   it('surfaces a missing sbx command', async () => {
     const terminal = fakeTerminal(async ({ command }) => {
       throw new CommandNotFoundError(command);

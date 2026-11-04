@@ -84,7 +84,7 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
     setActive(id);
   }
 
-  function newSessionOn(projectPath: string): void {
+  function newSandboxOn(projectPath: string): void {
     setError(undefined);
     setLaunchPath(projectPath);
     setActive(NEW);
@@ -123,7 +123,7 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
             onSelect={select}
             onClose={close}
             onAttach={attach}
-            onNewSession={newSessionOn}
+            onNewSandbox={newSandboxOn}
           />
         )}
         {active === NEW && <LaunchSession onLaunch={launch} error={error} initialProjectPath={launchPath} />}

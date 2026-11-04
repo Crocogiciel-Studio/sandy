@@ -17,7 +17,7 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
   return (
     <nav className="sidebar" aria-label="Projets">
       <button type="button" className="new-session" aria-current={active === newSessionId} onClick={() => onSelect(newSessionId)}>
-        Nouvelle session
+        Nouvelle sandbox
       </button>
       {projects.map((project) => {
         const viewId = projectViewId(project.path);

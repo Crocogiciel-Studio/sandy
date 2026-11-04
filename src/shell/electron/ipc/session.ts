@@ -43,8 +43,10 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
       return { ok: false, message: 'Requête de session invalide.' };
     }
     try {
-      const id = await startSession(deps, { agent, projectPath, cols, rows });
-      sessions.set(id, { sandboxName: sessionName(agent, projectPath), projectPath });
+      // Every launch is a new sandbox: re-attaching an existing one is "new session" on its row.
+      const suffix = randomUUID().slice(0, 6);
+      const id = await startSession(deps, { agent, projectPath, cols, rows, suffix });
+      sessions.set(id, { sandboxName: sessionName(agent, projectPath, suffix), projectPath });
       return { ok: true, id };
     } catch (error) {
       if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} n'est pas installé.` };
