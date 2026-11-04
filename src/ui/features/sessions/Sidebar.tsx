@@ -5,13 +5,15 @@ interface Props {
   // Docker sign-in is confirmed; unknown shows nothing rather than a doubtful claim.
   signedIn: boolean;
   projects: Project[];
+  // `sbx ls` failed: the sandbox-only projects are missing, so say so wherever the user is.
+  error?: string;
   active: string;
   newSessionId: string;
   onSelect: (id: string) => void;
   onClose: (session: OpenSession) => void;
 }
 
-export function Sidebar({ signedIn, projects, active, newSessionId, onSelect, onClose }: Props) {
+export function Sidebar({ signedIn, projects, error, active, newSessionId, onSelect, onClose }: Props) {
   return (
     <nav className="sidebar" aria-label="Projets">
       <button type="button" className="new-session" aria-current={active === newSessionId} onClick={() => onSelect(newSessionId)}>
@@ -49,6 +51,11 @@ export function Sidebar({ signedIn, projects, active, newSessionId, onSelect, on
           </section>
         );
       })}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
       {signedIn && <p className="account quiet">Connecté à Docker</p>}
     </nav>
   );

@@ -1,5 +1,5 @@
 import './app.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SandboxSummary, StartSessionResult } from '../../contracts/api';
 import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSession';
 import { ProjectPage } from '../features/sessions/ProjectPage';
@@ -54,6 +54,7 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
       const same = all.filter((one) => one.projectPath === projectPath && (one.label === base || one.label.startsWith(`${base} (`))).length;
       return [...all, { label: same ? `${base} (${same + 1})` : base, projectPath, session: result.session }];
     });
+    setLaunchPath(undefined);
     setActive(result.session.id);
     void refresh(true);
   }
@@ -73,10 +74,8 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
   }
 
   function select(id: string): void {
-    if (id === NEW) {
-      setError(undefined);
-      setLaunchPath(undefined);
-    }
+    if (id === NEW) setError(undefined);
+    setLaunchPath(undefined);
     setActive(id);
   }
 
@@ -89,11 +88,14 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
   const projects = buildProjects(sandboxes.sandboxes, running);
   const page = projects.find((project) => projectViewId(project.path) === active);
   // A project page whose project is gone (last sandbox removed) falls back to the new-session form.
-  const showNew = active === NEW || (active.startsWith('project:') && !page);
+  const orphanPage = active.startsWith('project:') && !page;
+  useEffect(() => {
+    if (orphanPage) setActive(NEW);
+  }, [orphanPage]);
 
   return (
     <div className="app">
-      <Sidebar signedIn={signedIn} projects={projects} active={active} newSessionId={NEW} onSelect={select} onClose={close} />
+      <Sidebar signedIn={signedIn} projects={projects} error={sandboxes.error} active={active} newSessionId={NEW} onSelect={select} onClose={close} />
       <main className="main">
         {running.map((one) => (
           <Terminal
@@ -118,7 +120,7 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
             onNewSession={newSessionOn}
           />
         )}
-        {showNew && <LaunchSession onLaunch={launch} error={error} initialProjectPath={launchPath} />}
+        {active === NEW && <LaunchSession onLaunch={launch} error={error} initialProjectPath={launchPath} />}
       </main>
     </div>
   );

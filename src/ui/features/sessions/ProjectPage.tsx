@@ -14,15 +14,10 @@ interface Props {
 }
 
 export function ProjectPage({ project, sandboxes, active, onSelect, onClose, onAttach, onNewSession }: Props) {
-  const { busy, error, refresh, stop, remove, whileBusy } = sandboxes;
+  const { busy, refresh, stop, remove, whileBusy } = sandboxes;
   return (
     <section className="project-page">
       <h1 title={project.path || undefined}>{project.name}</h1>
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
       <h2>Sessions en cours</h2>
       {project.sessions.length === 0 && <p className="empty">Aucune session ouverte.</p>}
       <ul>
