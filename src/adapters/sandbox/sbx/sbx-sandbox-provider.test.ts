@@ -28,9 +28,22 @@ describe('SbxSandboxProvider', () => {
 
   it('hands Claude its state-reporting hooks after --', () => {
     const { args } = provider.sessionCommand({ agent: 'claude', projectPath: '/p', name: 'claude-p-1a2b3c' });
-    expect(args.slice(0, 6)).toEqual(['run', 'claude', '/p', '--name', 'claude-p-1a2b3c', '--']);
-    expect(args[6]).toBe('--settings');
-    expect(Object.keys(JSON.parse(args[7]!).hooks)).toEqual(['UserPromptSubmit', 'PostToolUse', 'Notification', 'Stop']);
+    expect(args.slice(0, 6)).toEqual(['run', 'claude', '/p', '--name', 'claude-p-1a2b3c', '--kit']);
+    const separator = args.indexOf('--');
+    expect(args[separator + 1]).toBe('--settings');
+    expect(Object.keys(JSON.parse(args[separator + 2]!).hooks)).toEqual(['UserPromptSubmit', 'PostToolUse', 'Notification', 'Stop']);
+  });
+
+  it('applies each Claude kit with --kit, before the agent arguments', () => {
+    const kitted = new SbxSandboxProvider(async () => '', ['kit-a', '/local/kit-b']);
+    const { args } = kitted.sessionCommand({ agent: 'claude', projectPath: '/p', name: 'n' });
+    expect(args.slice(0, 9)).toEqual(['run', 'claude', '/p', '--name', 'n', '--kit', 'kit-a', '--kit', '/local/kit-b']);
+    expect(args[9]).toBe('--');
+  });
+
+  it('applies no kit to other agents', () => {
+    const kitted = new SbxSandboxProvider(async () => '', ['kit-a']);
+    expect(kitted.sessionCommand({ agent: 'codex', projectPath: '/p', name: 'n' }).args).not.toContain('--kit');
   });
 
   it('copies a file with sbx cp SRC SANDBOX:DST', async () => {

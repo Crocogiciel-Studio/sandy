@@ -1,5 +1,7 @@
 import { execFile } from 'node:child_process';
-import { delimiter } from 'node:path';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import type { SandboxInfo, SandboxProvider, SessionCommand, SignInState } from '../../../core/ports/sandbox-provider';
 import { searchDirs } from '../../../pty-host/search-dirs';
 import { agentArgs } from './agent-hooks';
@@ -10,6 +12,11 @@ import { parseSbxVersionOutput } from './sbx-version';
 // Built-in agents listed by `sbx run --help` (latest observed); sbx exposes no JSON list.
 const AGENTS = ['claude', 'codex', 'copilot', 'cursor', 'devin', 'docker-agent', 'droid', 'gemini', 'kiro', 'opencode', 'shell'] as const;
 const SBX_TIMEOUT_MS = 60_000;
+// Kits applied when a Claude sandbox is created; sbx ignores --kit on an existing sandbox.
+const CLAUDE_KITS = ['ghcr.io/crocogiciel/sbx-kit-aidd:latest'] as const;
+// Status bar kit installed by the user's setup script; skipped when absent so sbx does not fail on it.
+const STATUSLINE_KIT_DIR = join(homedir(), '.sbx-kits', 'claude-statusline');
+const localKits = (): string[] => (existsSync(STATUSLINE_KIT_DIR) ? [STATUSLINE_KIT_DIR] : []);
 
 // Resolves with stdout.
 export type RunSbx = (args: string[]) => Promise<string>;
@@ -30,7 +37,10 @@ const runSbx: RunSbx = (args) =>
   });
 
 export class SbxSandboxProvider implements SandboxProvider {
-  constructor(private readonly run: RunSbx = runSbx) {}
+  constructor(
+    private readonly run: RunSbx = runSbx,
+    private readonly claudeKits: readonly string[] = [...CLAUDE_KITS, ...localKits()],
+  ) {}
 
   listAgents(): readonly string[] {
     return AGENTS;
@@ -49,7 +59,9 @@ export class SbxSandboxProvider implements SandboxProvider {
   }
 
   sessionCommand({ agent, projectPath, name }: { agent: string; projectPath: string; name: string }): SessionCommand {
-    return { command: 'sbx', args: ['run', agent, projectPath, '--name', name, ...agentArgs(agent)] };
+    const kits = agent === 'claude' ? this.claudeKits.flatMap((kit) => ['--kit', kit]) : [];
+    // Kits go before agentArgs: its leading `--` hands everything after it to the agent.
+    return { command: 'sbx', args: ['run', agent, projectPath, '--name', name, ...kits, ...agentArgs(agent)] };
   }
 
   async checkSignIn(): Promise<SignInState> {
