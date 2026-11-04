@@ -3,6 +3,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
+import { BlockedHosts } from './BlockedHosts';
 import { formatDroppedPaths } from './dropped-paths';
 import { listContinuationFor } from './list-continuation';
 import { newlineInputFor } from './newline-key';
@@ -186,6 +187,7 @@ export function Terminal({ session, visible, ended, title, provisional, projectP
           {stateText}
         </span>
       </header>
+      <BlockedHosts sessionId={session.id} ended={ended} />
       <div ref={container} className="terminal-screen" />
       {dropError && (
         <p role="alert" className="error">

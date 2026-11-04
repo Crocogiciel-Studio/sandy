@@ -55,6 +55,23 @@ describe('SbxSandboxProvider', () => {
     expect(calls).toEqual([['cp', '/Users/me/a b.png', 'claude-app-1a2b3c:/tmp/x.png']]);
   });
 
+  it('reads the policy log of one sandbox', async () => {
+    const calls: string[][] = [];
+    const logging = new SbxSandboxProvider(async (args) => (calls.push(args), '{"allowed":[],"blocked":[]}'));
+
+    expect(await logging.policyLog('claude-app')).toEqual({ allowed: [], blocked: [] });
+    expect(calls).toEqual([['policy', 'log', 'claude-app', '--json', '--limit', '500']]);
+  });
+
+  it('allows a host for one sandbox only, never globally', async () => {
+    const calls: string[][] = [];
+    const allowing = new SbxSandboxProvider(async (args) => (calls.push(args), ''));
+
+    await allowing.allowHost({ name: 'claude-app', host: 'crocogiciel.com:443' });
+
+    expect(calls).toEqual([['policy', 'allow', 'network', '--sandbox', 'claude-app', 'crocogiciel.com:443']]);
+  });
+
   it('lists sandboxes from sbx ls --json', async () => {
     const calls: string[][] = [];
     const listing = new SbxSandboxProvider(async (args) => (calls.push(args), '[{"name":"a","agent":"claude","status":"running"}]'));

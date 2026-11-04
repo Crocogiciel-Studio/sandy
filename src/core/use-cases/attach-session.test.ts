@@ -17,6 +17,8 @@ function setup(sandboxes: SandboxInfo[]) {
     stop: async () => {},
     remove: async () => {},
     sessionCommand: () => ({ command: 'sbx', args: [] }),
+    policyLog: async () => ({ allowed: [], blocked: [] }),
+    allowHost: async () => {},
     attachCommand: ({ name }) => ({ command: 'sbx', args: ['run', '--name', name] }),
   };
   const terminal: TerminalProvider = {

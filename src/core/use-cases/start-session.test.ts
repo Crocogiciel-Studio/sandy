@@ -13,6 +13,8 @@ const sandbox: SandboxProvider = {
   copyIn: async () => {},
   stop: async () => {},
   remove: async () => {},
+  policyLog: async () => ({ allowed: [], blocked: [] }),
+  allowHost: async () => {},
   attachCommand: ({ name }) => ({ command: 'sbx', args: ['run', '--name', name] }),
 };
 

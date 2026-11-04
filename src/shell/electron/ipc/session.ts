@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   ActionResult,
   AttachSessionRequest,
+  BlockedHostsResult,
   ListSandboxesResult,
   PrepareDropResult,
   StartSessionRequest,
@@ -15,6 +16,7 @@ import type { SandboxProvider } from '../../../core/ports/sandbox-provider';
 import { CommandNotFoundError, type TerminalProvider } from '../../../core/ports/terminal-provider';
 import { sandboxDropPath } from '../../../core/domain/dropped-file';
 import { sessionName } from '../../../core/domain/session-name';
+import { allowBlockedHost, listBlockedHosts } from '../../../core/use-cases/blocked-hosts';
 import { attachSession } from '../../../core/use-cases/attach-session';
 import { dropFiles } from '../../../core/use-cases/drop-files';
 import { removeSandbox, stopSandbox } from '../../../core/use-cases/manage-sandbox';
@@ -25,7 +27,7 @@ const IMAGE_EXTENSIONS: Record<string, string> = { 'image/png': 'png', 'image/jp
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: TerminalProvider }): void {
-  const sessions = new Map<string, { sandboxName: string; projectPath: string }>();
+  const sessions = new Map<string, { sandboxName: string; projectPath: string; startedAt: number }>();
   deps.terminal.onExit((id) => sessions.delete(id));
 
   ipcMain.handle('session:pick-project', async (event) => {
@@ -46,7 +48,7 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
       // Every launch is a new sandbox: re-attaching an existing one is "new session" on its row.
       const suffix = randomUUID().slice(0, 6);
       const id = await startSession(deps, { agent, projectPath, cols, rows, suffix });
-      sessions.set(id, { sandboxName: sessionName(agent, projectPath, suffix), projectPath });
+      sessions.set(id, { sandboxName: sessionName(agent, projectPath, suffix), projectPath, startedAt: Date.now() });
       return { ok: true, id };
     } catch (error) {
       if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} is not installed.` };
@@ -83,10 +85,32 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
     if (typeof name !== 'string' || !isSize(cols) || !isSize(rows)) return { ok: false, message: 'Invalid session request.' };
     try {
       const { id, sandbox } = await attachSession(deps, { name, cols, rows });
-      sessions.set(id, { sandboxName: sandbox.name, projectPath: sandbox.workspaces[0] ?? '' });
+      sessions.set(id, { sandboxName: sandbox.name, projectPath: sandbox.workspaces[0] ?? '', startedAt: Date.now() });
       return { ok: true, id };
     } catch (error) {
       if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} is not installed.` };
+      return { ok: false, message: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
+  // The sandbox comes from the session, never from the renderer; only hosts sbx blocks right now can be allowed.
+  ipcMain.handle('session:blocked-hosts', async (_event, id: unknown): Promise<BlockedHostsResult> => {
+    const session = typeof id === 'string' ? sessions.get(id) : undefined;
+    if (!session) return { ok: false, message: 'Invalid request.' };
+    try {
+      return { ok: true, hosts: await listBlockedHosts(deps.sandbox, session.sandboxName, session.startedAt) };
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
+  ipcMain.handle('session:allow-host', async (_event, id: unknown, host: unknown): Promise<ActionResult> => {
+    const session = typeof id === 'string' ? sessions.get(id) : undefined;
+    if (!session || typeof host !== 'string') return { ok: false, message: 'Invalid request.' };
+    try {
+      await allowBlockedHost(deps.sandbox, { name: session.sandboxName, host, since: session.startedAt });
+      return { ok: true };
+    } catch (error) {
       return { ok: false, message: error instanceof Error ? error.message : String(error) };
     }
   });

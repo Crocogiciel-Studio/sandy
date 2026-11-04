@@ -314,6 +314,43 @@ h2 {
   margin-left: auto;
 }
 
+/* A block waits for the user's decision: --attention, no fill. */
+.blocked-hosts {
+  display: grid;
+  gap: 1px;
+  border-bottom: 1px solid var(--attention);
+  background: var(--line);
+}
+
+.blocked-host {
+  padding: 8px 12px;
+  background: var(--surface);
+}
+
+.blocked-host p {
+  margin: 0 0 6px;
+}
+
+.blocked-host .quiet {
+  margin: 6px 0 0;
+}
+
+.blocked-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.blocked-actions .keep {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.blocked-actions .allow {
+  border-color: var(--attention);
+  color: var(--attention);
+}
+
 /* Actions stay out of sight until the row is hovered or has keyboard focus. */
 .actions {
   position: absolute;

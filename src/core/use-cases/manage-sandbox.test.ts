@@ -12,6 +12,8 @@ function setup() {
     list: async () => [{ name: 'claude-app', agent: 'claude', status: 'running', workspaces: ['/work/app'] }],
     copyIn: async () => {},
     sessionCommand: () => ({ command: 'sbx', args: [] }),
+    policyLog: async () => ({ allowed: [], blocked: [] }),
+    allowHost: async () => {},
     attachCommand: () => ({ command: 'sbx', args: [] }),
     stop: async (name) => void calls.push(`stop ${name}`),
     remove: async (name) => void calls.push(`rm ${name}`),

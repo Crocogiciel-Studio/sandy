@@ -27,6 +27,8 @@
 
 - Terminal : xterm.js avec l'addon WebGL, et repli sur le renderer DOM si le contexte WebGL est perdu. Son thème est dérivé des tokens et suit le thème du système.
 
+- Bannière de domaine bloqué : sous l'en-tête du terminal, non modale, bordure `--attention`, une ligne par hôte bloqué. « Keep blocked » est l'action mise en avant ; « Allow … permanently » crée une règle limitée à la sandbox (hôte exact, port compris), jamais globale. Elle ne prend pas le focus : l'utilisateur peut être en train de taper à l'agent.
+
 ## Layout
 
 - Sidebar étroite : « New sandbox » (toujours une sandbox neuve), puis les projets (point d'état = session la plus urgente) avec leurs sessions ouvertes dessous. Pas de sandboxes ni de barre d'onglets.
