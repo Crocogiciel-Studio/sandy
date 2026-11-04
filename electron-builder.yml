@@ -1,5 +1,5 @@
 appId: dev.crocogiciel.sandy
-productName: sandy
+productName: Sandy
 directories:
   output: dist
 files:
@@ -23,4 +23,4 @@ linux:
   target: [AppImage, deb]
   maintainer: Crocogiciel Studio <guillaume.monrolin@crocogiciel.com>
   category: Development
-artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+artifactName: sandy-${version}-${os}-${arch}.${ext}

@@ -10,7 +10,7 @@ function createWindow(terminal: NodePtyTerminal): void {
   const window = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: 'sandy',
+    title: 'Sandy',
     webPreferences: {
       preload: join(import.meta.dirname, '../preload/index.cjs'),
       contextIsolation: true,
@@ -31,6 +31,8 @@ function createWindow(terminal: NodePtyTerminal): void {
     void window.loadFile(join(import.meta.dirname, '../renderer/index.html'));
   }
 }
+
+app.setName('Sandy');
 
 void app.whenReady().then(() => {
   // Packaged builds get their icon from electron-builder; in dev the dock would show Electron's.
