@@ -1,5 +1,5 @@
 import { projectState, projectViewId, type Project } from './projects';
-import { STATE_TEXT, sessionState, type OpenSession } from './session-state';
+import { PROVISIONAL_HINT, STATE_TEXT, displayName, isProvisional, sessionState, type OpenSession } from './session-state';
 
 interface Props {
   // Docker sign-in is confirmed; unknown shows nothing rather than a doubtful claim.
@@ -34,13 +34,15 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                   <li key={one.session.id} className="row">
                     <button type="button" className="row-main" aria-current={active === one.session.id} onClick={() => onSelect(one.session.id)}>
                       <span className="dot" data-state={state} aria-hidden="true" />
-                      <span className="row-label">{one.label}</span>
+                      <span className="row-label session-name" data-provisional={isProvisional(one) || undefined} title={isProvisional(one) ? PROVISIONAL_HINT : displayName(one)}>
+                        {displayName(one)}
+                      </span>
                       <span className="row-state" data-state={state}>
                         {STATE_TEXT[state](one)}
                       </span>
                     </button>
                     <span className="actions">
-                      <button type="button" aria-label={`Fermer ${one.label}`} onClick={() => onClose(one)}>
+                      <button type="button" aria-label={`Fermer ${displayName(one)}`} onClick={() => onClose(one)}>
                         Fermer
                       </button>
                     </span>
