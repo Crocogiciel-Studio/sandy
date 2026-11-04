@@ -10,6 +10,8 @@ function setup(sandboxes: SandboxInfo[]) {
   const sandbox: SandboxProvider = {
     listAgents: () => [],
     checkInstall: async () => ({ version: '0.49.2' }),
+    checkSignIn: async () => 'signed-in' as const,
+    signInCommand: () => ({ command: 'sbx', args: ['login'] }),
     list: async () => sandboxes,
     copyIn: async () => {},
     stop: async () => {},

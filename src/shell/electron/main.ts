@@ -36,7 +36,7 @@ void app.whenReady().then(() => {
   const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'));
   registerTerminalIpc(terminal);
   const sandbox = new SbxSandboxProvider();
-  registerSbxIpc({ sandbox });
+  registerSbxIpc({ sandbox, terminal });
   registerSessionIpc({ sandbox, terminal });
   createWindow(terminal);
 

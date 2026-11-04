@@ -26,6 +26,8 @@ export const STATE_TEXT: Record<SessionState, (one: OpenSession) => string> = {
 };
 
 interface Props {
+  // Docker sign-in is confirmed; unknown shows nothing rather than a doubtful claim.
+  signedIn: boolean;
   sessions: OpenSession[];
   active: string;
   newSessionId: string;
@@ -34,7 +36,7 @@ interface Props {
   onAttach: (sandbox: SandboxSummary) => Promise<void>;
 }
 
-export function Sidebar({ sessions, active, newSessionId, onSelect, onClose, onAttach }: Props) {
+export function Sidebar({ signedIn, sessions, active, newSessionId, onSelect, onClose, onAttach }: Props) {
   return (
     <nav className="sidebar" aria-label="Sessions">
       <button type="button" className="new-session" aria-current={active === newSessionId} onClick={() => onSelect(newSessionId)}>
@@ -67,6 +69,7 @@ export function Sidebar({ sessions, active, newSessionId, onSelect, onClose, onA
         </section>
       ))}
       <SandboxList onAttach={onAttach} />
+      {signedIn && <p className="account quiet">Connecté à Docker</p>}
     </nav>
   );
 }

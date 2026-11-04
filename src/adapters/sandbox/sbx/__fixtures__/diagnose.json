@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "checks": [
+    { "name": "CLI binary", "status": "pass", "message": "found", "detail": "/opt/homebrew/Caskroom/sbx/0.49.2/Sbx.app/Contents/MacOS/sbx", "hint": "" },
+    { "name": "Binary version", "status": "warn", "message": "update available: v0.50.0 (running v0.49.2)", "detail": "https://github.com/docker/sbx-releases/releases/tag/v0.50.0", "hint": "Download the latest release from the link above" },
+    { "name": "Daemon", "status": "pass", "message": "healthy", "detail": "version v0.49.2", "hint": "" },
+    { "name": "Authentication", "status": "pass", "message": "authenticated", "detail": "", "hint": "" },
+    { "name": "Global network policy", "status": "pass", "message": "initialized", "detail": "", "hint": "" }
+  ],
+  "summary": { "pass": 4, "warn": 1, "fail": 0, "skip": 0 }
+}

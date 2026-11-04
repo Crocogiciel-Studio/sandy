@@ -4,20 +4,25 @@ import type { SandboxSummary, StartSessionResult } from '../../contracts/api';
 import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSession';
 import { Sidebar, STATE_TEXT, sessionState, type OpenSession } from '../features/sessions/Sidebar';
 import { SbxSetup } from '../features/onboarding/SbxSetup';
+import { SignInSetup } from '../features/onboarding/SignInSetup';
 import { useSbxStatus } from '../features/onboarding/use-sbx-status';
+import { useSignIn } from '../features/onboarding/use-sign-in';
 import { openTerminal, Terminal } from '../features/terminal/Terminal';
 
 const NEW = 'new';
 
-// Nothing else works without a usable sbx: the setup screen stands in until it is.
+// Nothing else works without a usable, signed-in sbx: a setup screen stands in until it is.
 export function App() {
-  const { status, checking, recheck } = useSbxStatus();
-  if (!status) return null;
-  if (status.status !== 'ok') return <SbxSetup status={status} checking={checking} onRecheck={recheck} />;
-  return <Sessions />;
+  const sbx = useSbxStatus();
+  const signIn = useSignIn(sbx.status?.status === 'ok');
+  if (!sbx.status) return null;
+  if (sbx.status.status !== 'ok') return <SbxSetup status={sbx.status} checking={sbx.checking} onRecheck={sbx.recheck} />;
+  if (!signIn.state) return null;
+  if (signIn.state === 'signed-out') return <SignInSetup checking={signIn.checking} onRecheck={signIn.recheck} />;
+  return <Sessions signedIn={signIn.state === 'signed-in'} />;
 }
 
-function Sessions() {
+function Sessions({ signedIn }: { signedIn: boolean }) {
   const [running, setRunning] = useState<OpenSession[]>([]);
   const [active, setActive] = useState<string>(NEW);
   const [error, setError] = useState<string>();
@@ -63,7 +68,7 @@ function Sessions() {
 
   return (
     <div className="app">
-      <Sidebar sessions={running} active={active} newSessionId={NEW} onSelect={select} onClose={close} onAttach={attach} />
+      <Sidebar signedIn={signedIn} sessions={running} active={active} newSessionId={NEW} onSelect={select} onClose={close} onAttach={attach} />
       <main className="main">
         {running.map((one) => (
           <Terminal
