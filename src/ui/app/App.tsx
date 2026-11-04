@@ -4,7 +4,8 @@ import type { SandboxSummary, StartSessionResult } from '../../contracts/api';
 import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSession';
 import { ProjectPage } from '../features/sessions/ProjectPage';
 import { buildProjects, projectViewId } from '../features/sessions/projects';
-import { STATE_TEXT, sessionState, type OpenSession } from '../features/sessions/session-state';
+import { parseTitle } from '../features/terminal/session-title';
+import { STATE_TEXT, displayName, isProvisional, sessionState, type OpenSession } from '../features/sessions/session-state';
 import { Sidebar } from '../features/sessions/Sidebar';
 import { useSandboxes } from '../features/sessions/use-sandboxes';
 import { SbxSetup } from '../features/onboarding/SbxSetup';
@@ -46,6 +47,10 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
       void refresh(true);
     },
     (id, activity) => setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, activity } : one))),
+    (id, raw) => {
+      const title = parseTitle(raw, agent);
+      if (title) setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, title } : one)));
+    },
     );
     if (!result.ok) return setError(result.message);
     // Two sessions of the same agent on the same project must stay tellable apart.
@@ -103,7 +108,8 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
             session={one.session}
             visible={active === one.session.id}
             ended={one.exitCode !== undefined}
-            title={one.label}
+            title={displayName(one)}
+            provisional={isProvisional(one)}
             projectPath={one.projectPath}
             state={sessionState(one)}
             stateText={STATE_TEXT[sessionState(one)](one)}
