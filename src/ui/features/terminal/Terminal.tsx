@@ -30,6 +30,9 @@ export async function openTerminal(
   onTitle: (id: string, title: string) => void = () => undefined,
 ): Promise<{ ok: true; session: TerminalSession } | { ok: false; message: string }> {
   const { terminal } = window.sandy;
+  // xterm measures its cells once, at creation: with the font still loading it measures the fallback,
+  // computes too many rows and the bottom ones end up clipped.
+  await document.fonts.load(`13px ${terminalFont()}`).catch(() => undefined);
   const xterm = new XTerm({ cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
   const offTheme = followSystemTheme((theme) => {
     xterm.options.theme = theme;
