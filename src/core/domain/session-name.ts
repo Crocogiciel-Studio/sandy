@@ -2,11 +2,11 @@ import { isValidSandboxName } from './sandbox-name';
 
 const MAX_FOLDER_LENGTH = 40;
 
-// `<agent>-<folder>-<hash>`: the hash of the full path keeps same-named folders apart
-// and gives a project the same sandbox on every launch.
-export function sessionName(agent: string, projectPath: string): string {
+// `<agent>-<folder>-<hash>[-<suffix>]`: the hash of the full path keeps same-named folders apart.
+// Without a suffix a project gets the same sandbox on every launch; with one, a new sandbox each time.
+export function sessionName(agent: string, projectPath: string, suffix = ''): string {
   const folder = slug(projectPath.split(/[\\/]/).filter(Boolean).pop() ?? '').slice(0, MAX_FOLDER_LENGTH);
-  const name = [slug(agent), folder, shortHash(projectPath)].filter(Boolean).join('-');
+  const name = [slug(agent), folder, shortHash(projectPath), slug(suffix)].filter(Boolean).join('-');
   if (!isValidSandboxName(name)) throw new Error(`Cannot derive a sandbox name from ${agent} and ${projectPath}`);
   return name;
 }

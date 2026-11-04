@@ -28,7 +28,8 @@
 
 ## Layout
 
-- Sidebar étroite : « Nouvelle session », sessions ouvertes groupées par projet (point d'état), puis les sandboxes existantes. Pas de barre d'onglets.
+- Sidebar étroite : « Nouvelle sandbox » (toujours une sandbox neuve), puis les projets (point d'état = session la plus urgente) avec leurs sessions ouvertes dessous. Pas de sandboxes ni de barre d'onglets.
+- Page projet (clic sur un projet) : sessions en cours, sandboxes du projet (« Nouvelle session » = ré-attacher la sandbox, arrêter, supprimer), « Nouvelle sandbox » pré-remplie. Les sandboxes sans workspace sont dans « Autres ».
 - Le terminal occupe la zone principale ; son filet est la frontière de sandbox (`--isolated` en cours, `--line` terminée).
 - Actions (fermer, arrêter, supprimer) visibles au survol ou au focus clavier seulement. Pas de cartes ni de dégradés.
 - Styles en classes dans `app.css`, pas d'inline. Vocabulaire de l'utilisateur, pas celui de `sbx`.

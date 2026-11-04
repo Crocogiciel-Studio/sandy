@@ -5,11 +5,19 @@ export interface LaunchRequest {
   projectPath: string;
 }
 
-export function LaunchSession({ onLaunch, error }: { onLaunch: (request: LaunchRequest) => Promise<void>; error?: string }) {
+export function LaunchSession({
+  onLaunch,
+  error,
+  initialProjectPath = '',
+}: {
+  onLaunch: (request: LaunchRequest) => Promise<void>;
+  error?: string;
+  initialProjectPath?: string;
+}) {
   const { session } = window.sandy;
   const [agents, setAgents] = useState<string[]>([]);
   const [agent, setAgent] = useState('');
-  const [projectPath, setProjectPath] = useState('');
+  const [projectPath, setProjectPath] = useState(initialProjectPath);
   const [launching, setLaunching] = useState(false);
 
   useEffect(() => {
@@ -41,7 +49,7 @@ export function LaunchSession({ onLaunch, error }: { onLaunch: (request: LaunchR
         void launch();
       }}
     >
-      <h1>Nouvelle session</h1>
+      <h1>Nouvelle sandbox</h1>
       <label htmlFor="project">Projet</label>
       <input id="project" value={projectPath} readOnly placeholder="Aucun dossier choisi" />
       <button type="button" onClick={() => void pickProject()}>

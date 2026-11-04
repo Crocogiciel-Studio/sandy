@@ -6,7 +6,7 @@ import type { PrepareDropResult, StartSessionResult } from '../../../contracts/a
 import { formatDroppedPaths } from './dropped-paths';
 import { listContinuationFor } from './list-continuation';
 import { newlineInputFor } from './newline-key';
-import type { SessionState } from '../sessions/Sidebar';
+import { PROVISIONAL_HINT, type SessionState } from '../sessions/session-state';
 import { ACTIVITY_OSC, type Activity, parseActivity } from './session-activity';
 import { currentTerminalTheme, followSystemTheme, terminalFont } from './terminal-theme';
 
@@ -27,6 +27,7 @@ export async function openTerminal(
   start: (cols: number, rows: number) => Promise<StartSessionResult>,
   onExit: (id: string, exitCode: number) => void,
   onActivity: (id: string, activity: Activity) => void,
+  onTitle: (id: string, title: string) => void = () => undefined,
 ): Promise<{ ok: true; session: TerminalSession } | { ok: false; message: string }> {
   const { terminal } = window.sandy;
   const xterm = new XTerm({ cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
@@ -41,6 +42,11 @@ export async function openTerminal(
     const activity = parseActivity(payload);
     if (activity && activityOf.id !== undefined) onActivity(activityOf.id, activity);
     return true;
+  });
+
+  // Agents name their session through the terminal title; the caller decides what is worth keeping.
+  xterm.onTitleChange((title) => {
+    if (activityOf.id !== undefined) onTitle(activityOf.id, title);
   });
 
   const started: { id?: string } = {};
@@ -96,12 +102,14 @@ interface TerminalProps {
   visible: boolean;
   ended: boolean;
   title: string;
+  // The name is still the agent's: the agent has not named the session yet.
+  provisional: boolean;
   projectPath: string;
   state: SessionState;
   stateText: string;
 }
 
-export function Terminal({ session, visible, ended, title, projectPath, state, stateText }: TerminalProps) {
+export function Terminal({ session, visible, ended, title, provisional, projectPath, state, stateText }: TerminalProps) {
   const container = useRef<HTMLDivElement>(null);
   const [dropError, setDropError] = useState<string>();
 
@@ -168,7 +176,9 @@ export function Terminal({ session, visible, ended, title, projectPath, state, s
     <div className="terminal" data-state={ended ? 'ended' : 'running'} style={{ display: visible ? 'flex' : 'none' }}>
       <header className="terminal-header">
         <span className="dot" data-state={state} aria-hidden="true" />
-        <strong>{title}</strong>
+        <strong className="session-name" data-provisional={provisional || undefined} title={provisional ? PROVISIONAL_HINT : title}>
+          {title}
+        </strong>
         <span className="quiet" title={projectPath}>
           {projectPath.split(/[\\/]/).filter(Boolean).at(-1) ?? projectPath}
         </span>

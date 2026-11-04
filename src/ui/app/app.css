@@ -82,6 +82,122 @@ h2 {
   background: var(--bg);
 }
 
+.project-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fold {
+  flex: none;
+  width: 20px;
+  height: 24px;
+  padding: 0;
+  color: var(--text-muted);
+}
+
+.chevron {
+  display: block;
+  width: 5px;
+  height: 5px;
+  margin: auto;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+  transition: transform 0.12s;
+}
+
+.fold[aria-expanded='false'] .chevron {
+  transform: rotate(-45deg);
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.project-add {
+  position: absolute;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0;
+}
+
+.project-row:hover .project-add,
+.project-add:focus-visible,
+.project-add[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.project-add:hover {
+  color: var(--text);
+  border-color: var(--line);
+}
+
+/* Sessions hang off their project: indented under a guide line, smaller than the project. */
+.sessions {
+  margin: 2px 0 0 14px;
+  padding-left: 6px;
+  border-left: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.project {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.project:hover,
+.project[aria-current='true'] {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.project-page {
+  width: min(560px, 100%);
+  box-sizing: border-box;
+  padding: 32px 24px;
+  margin: 0 auto;
+}
+
+.project-page h1 {
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.project-page h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.project-page ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-new {
+  margin-top: 16px;
+  border-color: var(--line);
+}
+
 .group h2 {
   display: flex;
   align-items: center;
@@ -136,6 +252,13 @@ h2 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The agent has not named the session yet: its own name is a placeholder. */
+.session-name[data-provisional] {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .row-state {
@@ -454,4 +577,27 @@ h2 {
   .dot[data-state='attention'] {
     animation: none;
   }
+}
+
+/* Sandbox choice under a project's +; sits over the sessions list. */
+.choice {
+  position: absolute;
+  top: 100%;
+  right: 4px;
+  z-index: 10;
+  min-width: 180px;
+  margin: 2px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.choice button {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
 }
