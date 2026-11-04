@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { projectState, projectViewId, type Project } from './projects';
 import { PROVISIONAL_HINT, STATE_TEXT, displayName, isProvisional, sessionState, type OpenSession } from './session-state';
 
@@ -11,9 +12,17 @@ interface Props {
   newSessionId: string;
   onSelect: (id: string) => void;
   onClose: (session: OpenSession) => void;
+  onNewSandbox: (projectPath: string) => void;
 }
 
-export function Sidebar({ signedIn, projects, error, active, newSessionId, onSelect, onClose }: Props) {
+export function Sidebar({ signedIn, projects, error, active, newSessionId, onSelect, onClose, onNewSandbox }: Props) {
+  const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
+  const toggle = (id: string): void =>
+    setFolded((all) => {
+      const next = new Set(all);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
   return (
     <nav className="sidebar" aria-label="Projets">
       <button type="button" className="new-session" aria-current={active === newSessionId} onClick={() => onSelect(newSessionId)}>
@@ -21,13 +30,32 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
       </button>
       {projects.map((project) => {
         const viewId = projectViewId(project.path);
+        const isFolded = folded.has(viewId);
         return (
           <section key={viewId} className="group">
-            <button type="button" className="project" title={project.path || undefined} aria-current={active === viewId} onClick={() => onSelect(viewId)}>
-              <span className="dot" data-state={projectState(project) ?? 'idle'} aria-hidden="true" />
-              <span className="row-label">{project.name}</span>
-            </button>
-            <ul>
+            <div className="project-row">
+              <button
+                type="button"
+                className="fold"
+                aria-expanded={!isFolded}
+                aria-label={`${isFolded ? 'Déplier' : 'Replier'} ${project.name}`}
+                onClick={() => toggle(viewId)}
+              >
+                <span className="chevron" aria-hidden="true" />
+              </button>
+              <button type="button" className="project" title={project.path || undefined} aria-current={active === viewId} onClick={() => onSelect(viewId)}>
+                <span className="dot" data-state={projectState(project) ?? 'idle'} aria-hidden="true" />
+                <span className="row-label">{project.name}</span>
+                {isFolded && project.sessions.length > 0 && <span className="count">{project.sessions.length}</span>}
+              </button>
+              {project.path && (
+                <button type="button" className="project-add" aria-label={`Nouvelle sandbox dans ${project.name}`} title="Nouvelle sandbox" onClick={() => onNewSandbox(project.path)}>
+                  +
+                </button>
+              )}
+            </div>
+            {!isFolded && (
+            <ul className="sessions">
               {project.sessions.map((one) => {
                 const state = sessionState(one);
                 return (
@@ -50,6 +78,7 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                 );
               })}
             </ul>
+            )}
           </section>
         );
       })}

@@ -82,16 +82,81 @@ h2 {
   background: var(--bg);
 }
 
+.project-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fold {
+  flex: none;
+  width: 20px;
+  height: 24px;
+  padding: 0;
+  color: var(--text-muted);
+}
+
+.chevron {
+  display: block;
+  width: 5px;
+  height: 5px;
+  margin: auto;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+  transition: transform 0.12s;
+}
+
+.fold[aria-expanded='false'] .chevron {
+  transform: rotate(-45deg);
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.project-add {
+  position: absolute;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0;
+}
+
+.project-row:hover .project-add,
+.project-add:focus-visible {
+  opacity: 1;
+}
+
+.project-add:hover {
+  color: var(--text);
+  border-color: var(--line);
+}
+
+/* Sessions hang off their project: indented under a guide line, smaller than the project. */
+.sessions {
+  margin: 2px 0 0 14px;
+  padding-left: 6px;
+  border-left: 1px solid var(--line);
+  font-size: 13px;
+}
+
 .project {
   display: grid;
-  grid-template-columns: 8px 1fr;
+  grid-template-columns: 8px 1fr auto;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 5px 8px;
   text-align: left;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--text);
 }
 
 .project:hover,
