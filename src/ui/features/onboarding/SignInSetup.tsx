@@ -27,7 +27,7 @@ export function SignInSetup({ checking, onRecheck }: SignInSetupProps) {
         live.current = undefined;
         setSession(undefined);
         if (exitCode === 0) onRecheck();
-        else setMessage(`La connexion a échoué (code ${exitCode}).`);
+        else setMessage(`Sign-in failed (code ${exitCode}).`);
       },
       () => undefined,
     );
@@ -61,22 +61,22 @@ export function SignInSetup({ checking, onRecheck }: SignInSetupProps) {
 
   return (
     <main className="setup">
-      <h1>Connexion à Docker requise</h1>
+      <h1>Docker sign-in required</h1>
       <p className="setup-problem" role="status">
-        sbx n’est pas connecté à Docker : il l’exige pour créer des sandboxes.
+        sbx is not signed in to Docker, which it needs to create sandboxes.
       </p>
       {session ? (
         <>
-          <p>Suivez les instructions ci-dessous, puis validez dans votre navigateur.</p>
+          <p>Follow the instructions below, then confirm in your browser.</p>
           <div ref={screen} className="setup-terminal" />
         </>
       ) : (
         <div className="setup-actions">
           <button type="button" className="primary" onClick={() => void signIn()} disabled={starting}>
-            Se connecter
+            Sign in
           </button>
           <button type="button" onClick={onRecheck} disabled={checking}>
-            Revérifier
+            Check again
           </button>
         </div>
       )}

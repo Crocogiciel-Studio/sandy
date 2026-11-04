@@ -33,7 +33,7 @@ describe('buildProjects', () => {
 
   it('puts sandboxes without workspace in a last project', () => {
     const projects = buildProjects([sandbox('orphan', []), sandbox('claude-api', ['/a/api'])], []);
-    expect(projects.map((project) => project.name)).toEqual(['api', 'Autres']);
+    expect(projects.map((project) => project.name)).toEqual(['api', 'Others']);
     expect(projects[1]?.sandboxes.map((one) => one.name)).toEqual(['orphan']);
   });
 

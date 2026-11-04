@@ -45,9 +45,9 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
       return next;
     });
   return (
-    <nav className="sidebar" aria-label="Projets">
+    <nav className="sidebar" aria-label="Projects">
       <button type="button" className="new-session" aria-current={active === newSessionId} onClick={() => onSelect(newSessionId)}>
-        Nouvelle sandbox
+        New sandbox
       </button>
       {projects.map((project) => {
         const viewId = projectViewId(project.path);
@@ -59,7 +59,7 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                 type="button"
                 className="fold"
                 aria-expanded={!isFolded}
-                aria-label={`${isFolded ? 'Déplier' : 'Replier'} ${project.name}`}
+                aria-label={`${isFolded ? 'Expand' : 'Collapse'} ${project.name}`}
                 onClick={() => toggle(viewId)}
               >
                 <span className="chevron" aria-hidden="true" />
@@ -73,10 +73,10 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                 <button
                   type="button"
                   className="project-add"
-                  aria-label={`Nouvelle session dans ${project.name}`}
+                  aria-label={`New session in ${project.name}`}
                   aria-haspopup={attachable(project).length > 1 ? 'menu' : undefined}
                   aria-expanded={choosing === viewId}
-                  title="Nouvelle session"
+                  title="New session"
                   disabled={busy !== undefined}
                   onClick={(event) => {
                     const choices = attachable(project);
@@ -91,7 +91,7 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                 </button>
               )}
               {choosing === viewId && (
-                <ul className="choice" role="menu" aria-label={`Sandboxes de ${project.name}`}>
+                <ul className="choice" role="menu" aria-label={`Sandboxes of ${project.name}`}>
                   {attachable(project).map((sandbox) => (
                     <li key={sandbox.name} role="none">
                       <button type="button" role="menuitem" autoFocus={sandbox === attachable(project)[0]} onClick={() => onAttach(sandbox)}>
@@ -102,7 +102,7 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                   ))}
                   <li role="none">
                     <button type="button" role="menuitem" onClick={() => onNewSandbox(project.path)}>
-                      Nouvelle sandbox
+                      New sandbox
                     </button>
                   </li>
                 </ul>
@@ -124,8 +124,8 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                       </span>
                     </button>
                     <span className="actions">
-                      <button type="button" aria-label={`Fermer ${displayName(one)}`} onClick={() => onClose(one)}>
-                        Fermer
+                      <button type="button" aria-label={`Close ${displayName(one)}`} onClick={() => onClose(one)}>
+                        Close
                       </button>
                     </span>
                   </li>
@@ -141,7 +141,7 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
           {error}
         </p>
       )}
-      {signedIn && <p className="account quiet">Connecté à Docker</p>}
+      {signedIn && <p className="account quiet">Signed in to Docker</p>}
     </nav>
   );
 }

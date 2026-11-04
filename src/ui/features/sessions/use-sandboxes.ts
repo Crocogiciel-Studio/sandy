@@ -41,7 +41,7 @@ export function useSandboxes() {
   const stop = (sandbox: SandboxSummary): Promise<void> => act(sandbox, window.sandy.session.stopSandbox);
 
   function remove(sandbox: SandboxSummary): Promise<void> {
-    if (!window.confirm(`Supprimer définitivement la sandbox ${sandbox.name} ? Ses sessions ouvertes seront fermées.`)) return Promise.resolve();
+    if (!window.confirm(`Permanently delete sandbox ${sandbox.name}? Its open sessions will be closed.`)) return Promise.resolve();
     return act(sandbox, window.sandy.session.removeSandbox);
   }
 

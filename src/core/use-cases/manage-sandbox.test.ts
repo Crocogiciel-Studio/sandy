@@ -32,8 +32,8 @@ describe('manage sandbox', () => {
   it('refuses unknown and option-like names without touching sbx', async () => {
     const { sandbox, calls } = setup();
 
-    await expect(stopSandbox(sandbox, 'nope')).rejects.toThrow('introuvable');
-    await expect(removeSandbox(sandbox, '--all')).rejects.toThrow('invalide');
+    await expect(stopSandbox(sandbox, 'nope')).rejects.toThrow('not found');
+    await expect(removeSandbox(sandbox, '--all')).rejects.toThrow('Invalid');
     expect(calls).toEqual([]);
   });
 });

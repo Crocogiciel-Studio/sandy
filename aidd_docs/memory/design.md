@@ -2,6 +2,7 @@
 
 ## System
 
+- Interface en anglais uniquement, pas d'i18n : libellés, erreurs du shell et des adapters, `aria-label`, infobulles. Seule `aidd_docs/` reste en français.
 - UI React dans `src/ui`, découpée par feature.
 - Sandbox-first, calme, peu encombré : le terminal est l'élément principal, le reste s'efface. Le seul signal visuel fort est la frontière de la session, dont la couleur dit l'état.
 - Tokens CSS dans `src/ui/app/theme.css` (sombre par défaut, clair selon le système). Aucune couleur en dur dans les composants : `var(--...)`.
@@ -28,8 +29,8 @@
 
 ## Layout
 
-- Sidebar étroite : « Nouvelle sandbox » (toujours une sandbox neuve), puis les projets (point d'état = session la plus urgente) avec leurs sessions ouvertes dessous. Pas de sandboxes ni de barre d'onglets.
-- Page projet (clic sur un projet) : sessions en cours, sandboxes du projet (« Nouvelle session » = ré-attacher la sandbox, arrêter, supprimer), « Nouvelle sandbox » pré-remplie. Les sandboxes sans workspace sont dans « Autres ».
+- Sidebar étroite : « New sandbox » (toujours une sandbox neuve), puis les projets (point d'état = session la plus urgente) avec leurs sessions ouvertes dessous. Pas de sandboxes ni de barre d'onglets.
+- Page projet (clic sur un projet) : sessions en cours, sandboxes du projet (« New session » = ré-attacher la sandbox, arrêter, supprimer), « New sandbox » pré-remplie. Les sandboxes sans workspace sont dans « Others ».
 - Le terminal occupe la zone principale ; son filet est la frontière de sandbox (`--isolated` en cours, `--line` terminée).
 - Actions (fermer, arrêter, supprimer) visibles au survol ou au focus clavier seulement. Pas de cartes ni de dégradés.
 - Styles en classes dans `app.css`, pas d'inline. Vocabulaire de l'utilisateur, pas celui de `sbx`.

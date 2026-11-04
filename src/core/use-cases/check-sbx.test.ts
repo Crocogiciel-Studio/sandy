@@ -23,9 +23,9 @@ describe('checkSbx', () => {
   it('lets a failure to ask for the version surface', async () => {
     const failing = {
       checkInstall: async () => {
-        throw new Error('sbx version a échoué');
+        throw new Error('sbx version failed');
       },
     };
-    await expect(checkSbx(failing)).rejects.toThrow('sbx version a échoué');
+    await expect(checkSbx(failing)).rejects.toThrow('sbx version failed');
   });
 });

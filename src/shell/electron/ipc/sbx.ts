@@ -19,11 +19,11 @@ export function registerSbxIpc(deps: { sandbox: SandboxProvider; terminal: Termi
   ipcMain.handle('sbx:check-sign-in', (): Promise<SignInState> => deps.sandbox.checkSignIn());
 
   ipcMain.handle('sbx:sign-in', async (_event, cols: unknown, rows: unknown): Promise<StartSessionResult> => {
-    if (!isSize(cols) || !isSize(rows)) return { ok: false, message: 'Requête de connexion invalide.' };
+    if (!isSize(cols) || !isSize(rows)) return { ok: false, message: 'Invalid sign-in request.' };
     try {
       return { ok: true, id: await startSignIn(deps, { cwd: homedir(), cols, rows }) };
     } catch (error) {
-      if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} n'est pas installé.` };
+      if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} is not installed.` };
       return { ok: false, message: error instanceof Error ? error.message : String(error) };
     }
   });

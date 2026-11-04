@@ -49,11 +49,11 @@ export function LaunchSession({
         void launch();
       }}
     >
-      <h1>Nouvelle sandbox</h1>
-      <label htmlFor="project">Projet</label>
-      <input id="project" value={projectPath} readOnly placeholder="Aucun dossier choisi" />
+      <h1>New sandbox</h1>
+      <label htmlFor="project">Project</label>
+      <input id="project" value={projectPath} readOnly placeholder="No folder chosen" />
       <button type="button" onClick={() => void pickProject()}>
-        Choisir
+        Choose
       </button>
       <label htmlFor="agent">Agent</label>
       <select id="agent" value={agent} onChange={(event) => setAgent(event.target.value)}>
@@ -62,7 +62,7 @@ export function LaunchSession({
         ))}
       </select>
       <button type="submit" className="primary" disabled={!projectPath || !agent || launching}>
-        Lancer
+        Launch
       </button>
       {error && (
         <p role="alert" className="error">

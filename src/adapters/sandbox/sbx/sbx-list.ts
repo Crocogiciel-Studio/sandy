@@ -7,9 +7,9 @@ export function parseSandboxList(json: string): SandboxInfo[] {
   try {
     data = JSON.parse(json);
   } catch {
-    throw new Error('sbx ls --json : sortie illisible.');
+    throw new Error('sbx ls --json: unreadable output.');
   }
-  if (!Array.isArray(data)) throw new Error('sbx ls --json : tableau attendu.');
+  if (!Array.isArray(data)) throw new Error('sbx ls --json: expected an array.');
   return data.flatMap((entry: unknown) => {
     if (typeof entry !== 'object' || entry === null) return [];
     const { name, agent, status, workspaces, last_used_at: lastUsedAt } = entry as Record<string, unknown>;

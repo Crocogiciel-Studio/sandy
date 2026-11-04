@@ -81,7 +81,7 @@ describe('SbxSandboxProvider', () => {
   describe('checkInstall', () => {
     const failing = (code: string | undefined) =>
       new SbxSandboxProvider(async () => {
-        throw Object.assign(new Error('sbx version a échoué : boom'), { code });
+        throw Object.assign(new Error('sbx version failed: boom'), { code });
       });
 
     it('reads the version from sbx version --json', async () => {
@@ -116,7 +116,7 @@ describe('SbxSandboxProvider', () => {
 
     it('still reads the report when diagnose exits non-zero', async () => {
       const failing = new SbxSandboxProvider(async () => {
-        throw Object.assign(new Error('sbx diagnose a échoué'), { stdout: '{"checks":[{"name":"Authentication","status":"fail"}]}' });
+        throw Object.assign(new Error('sbx diagnose failed'), { stdout: '{"checks":[{"name":"Authentication","status":"fail"}]}' });
       });
 
       expect(await failing.checkSignIn()).toBe('signed-out');
@@ -126,7 +126,7 @@ describe('SbxSandboxProvider', () => {
       const skipped = '{"checks":[{"name":"Daemon","status":"fail"},{"name":"Authentication","status":"skip"}]}';
       const signedOut = new SbxSandboxProvider(async (args) => {
         if (args[0] === 'diagnose') return skipped;
-        throw new Error('sbx ls a échoué : try: sbx login');
+        throw new Error('sbx ls failed: try: sbx login');
       });
       const signedIn = new SbxSandboxProvider(async (args) => (args[0] === 'diagnose' ? skipped : '[]'));
 
@@ -136,7 +136,7 @@ describe('SbxSandboxProvider', () => {
 
     it('is unknown, never a rejection, when diagnose gives nothing to read', async () => {
       const broken = new SbxSandboxProvider(async () => {
-        throw new Error('sbx diagnose a échoué');
+        throw new Error('sbx diagnose failed');
       });
 
       expect(await broken.checkSignIn()).toBe('unknown');
