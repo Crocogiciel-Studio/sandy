@@ -10,7 +10,7 @@ function createWindow(terminal: NodePtyTerminal): void {
   const window = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: 'sandy',
+    title: 'Sandy',
     webPreferences: {
       preload: join(import.meta.dirname, '../preload/index.cjs'),
       contextIsolation: true,
@@ -32,7 +32,11 @@ function createWindow(terminal: NodePtyTerminal): void {
   }
 }
 
+app.setName('Sandy');
+
 void app.whenReady().then(() => {
+  // Packaged builds get their icon from electron-builder; in dev the dock would show Electron's.
+  if (!app.isPackaged) app.dock?.setIcon(join(app.getAppPath(), 'build/icon.png'));
   const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'));
   registerTerminalIpc(terminal);
   const sandbox = new SbxSandboxProvider();
