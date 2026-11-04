@@ -6,7 +6,7 @@ import type { PrepareDropResult, StartSessionResult } from '../../../contracts/a
 import { formatDroppedPaths } from './dropped-paths';
 import { listContinuationFor } from './list-continuation';
 import { newlineInputFor } from './newline-key';
-import type { SessionState } from '../sessions/Sidebar';
+import type { SessionState } from '../sessions/session-state';
 import { ACTIVITY_OSC, type Activity, parseActivity } from './session-activity';
 import { currentTerminalTheme, followSystemTheme, terminalFont } from './terminal-theme';
 

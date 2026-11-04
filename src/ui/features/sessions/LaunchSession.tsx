@@ -5,11 +5,19 @@ export interface LaunchRequest {
   projectPath: string;
 }
 
-export function LaunchSession({ onLaunch, error }: { onLaunch: (request: LaunchRequest) => Promise<void>; error?: string }) {
+export function LaunchSession({
+  onLaunch,
+  error,
+  initialProjectPath = '',
+}: {
+  onLaunch: (request: LaunchRequest) => Promise<void>;
+  error?: string;
+  initialProjectPath?: string;
+}) {
   const { session } = window.sandy;
   const [agents, setAgents] = useState<string[]>([]);
   const [agent, setAgent] = useState('');
-  const [projectPath, setProjectPath] = useState('');
+  const [projectPath, setProjectPath] = useState(initialProjectPath);
   const [launching, setLaunching] = useState(false);
 
   useEffect(() => {

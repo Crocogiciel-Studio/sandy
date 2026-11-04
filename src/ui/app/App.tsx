@@ -2,7 +2,11 @@ import './app.css';
 import { useState } from 'react';
 import type { SandboxSummary, StartSessionResult } from '../../contracts/api';
 import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSession';
-import { Sidebar, STATE_TEXT, sessionState, type OpenSession } from '../features/sessions/Sidebar';
+import { ProjectPage } from '../features/sessions/ProjectPage';
+import { buildProjects, projectViewId } from '../features/sessions/projects';
+import { STATE_TEXT, sessionState, type OpenSession } from '../features/sessions/session-state';
+import { Sidebar } from '../features/sessions/Sidebar';
+import { useSandboxes } from '../features/sessions/use-sandboxes';
 import { SbxSetup } from '../features/onboarding/SbxSetup';
 import { SignInSetup } from '../features/onboarding/SignInSetup';
 import { useSbxStatus } from '../features/onboarding/use-sbx-status';
@@ -26,6 +30,10 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
   const [running, setRunning] = useState<OpenSession[]>([]);
   const [active, setActive] = useState<string>(NEW);
   const [error, setError] = useState<string>();
+  // Folder the new-session form starts with, when it was opened from a project's page.
+  const [launchPath, setLaunchPath] = useState<string>();
+  const sandboxes = useSandboxes();
+  const { refresh } = sandboxes;
 
   async function open(
     agent: string,
@@ -33,8 +41,10 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
     start: (cols: number, rows: number) => Promise<StartSessionResult>,
   ): Promise<void> {
     setError(undefined);
-    const result = await openTerminal(start, (id, exitCode) =>
-      setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, exitCode } : one))),
+    const result = await openTerminal(start, (id, exitCode) => {
+      setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, exitCode } : one)));
+      void refresh(true);
+    },
     (id, activity) => setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, activity } : one))),
     );
     if (!result.ok) return setError(result.message);
@@ -45,6 +55,7 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
       return [...all, { label: same ? `${base} (${same + 1})` : base, projectPath, session: result.session }];
     });
     setActive(result.session.id);
+    void refresh(true);
   }
 
   const launch = ({ agent, projectPath }: LaunchRequest): Promise<void> =>
@@ -62,13 +73,27 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
   }
 
   function select(id: string): void {
-    if (id === NEW) setError(undefined);
+    if (id === NEW) {
+      setError(undefined);
+      setLaunchPath(undefined);
+    }
     setActive(id);
   }
 
+  function newSessionOn(projectPath: string): void {
+    setError(undefined);
+    setLaunchPath(projectPath);
+    setActive(NEW);
+  }
+
+  const projects = buildProjects(sandboxes.sandboxes, running);
+  const page = projects.find((project) => projectViewId(project.path) === active);
+  // A project page whose project is gone (last sandbox removed) falls back to the new-session form.
+  const showNew = active === NEW || (active.startsWith('project:') && !page);
+
   return (
     <div className="app">
-      <Sidebar signedIn={signedIn} sessions={running} active={active} newSessionId={NEW} onSelect={select} onClose={close} onAttach={attach} />
+      <Sidebar signedIn={signedIn} projects={projects} active={active} newSessionId={NEW} onSelect={select} onClose={close} />
       <main className="main">
         {running.map((one) => (
           <Terminal
@@ -82,7 +107,18 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
             stateText={STATE_TEXT[sessionState(one)](one)}
           />
         ))}
-        {active === NEW && <LaunchSession onLaunch={launch} error={error} />}
+        {page && (
+          <ProjectPage
+            project={page}
+            sandboxes={sandboxes}
+            active={active}
+            onSelect={select}
+            onClose={close}
+            onAttach={attach}
+            onNewSession={newSessionOn}
+          />
+        )}
+        {showNew && <LaunchSession onLaunch={launch} error={error} initialProjectPath={launchPath} />}
       </main>
     </div>
   );
