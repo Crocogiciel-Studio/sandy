@@ -129,7 +129,8 @@ h2 {
 }
 
 .project-row:hover .project-add,
-.project-add:focus-visible {
+.project-add:focus-visible,
+.project-add[aria-expanded='true'] {
   opacity: 1;
 }
 
@@ -576,4 +577,27 @@ h2 {
   .dot[data-state='attention'] {
     animation: none;
   }
+}
+
+/* Sandbox choice under a project's +; sits over the sessions list. */
+.choice {
+  position: absolute;
+  top: 100%;
+  right: 4px;
+  z-index: 10;
+  min-width: 180px;
+  margin: 2px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.choice button {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
 }

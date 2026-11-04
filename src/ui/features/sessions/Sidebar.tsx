@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { SandboxSummary } from '../../../contracts/api';
 import { projectState, projectViewId, type Project } from './projects';
 import { PROVISIONAL_HINT, STATE_TEXT, displayName, isProvisional, sessionState, type OpenSession } from './session-state';
 
@@ -13,9 +14,29 @@ interface Props {
   onSelect: (id: string) => void;
   onClose: (session: OpenSession) => void;
   onNewSandbox: (projectPath: string) => void;
+  // New session in an existing sandbox.
+  onAttach: (sandbox: SandboxSummary) => void;
+  busy?: string;
 }
 
-export function Sidebar({ signedIn, projects, error, active, newSessionId, onSelect, onClose, onNewSandbox }: Props) {
+const attachable = (project: Project): SandboxSummary[] => project.sandboxes.filter((sandbox) => sandbox.workspaces.length > 0);
+
+export function Sidebar({ signedIn, projects, error, active, newSessionId, onSelect, onClose, onNewSandbox, onAttach, busy }: Props) {
+  // Project whose sandbox choice is open.
+  const [choosing, setChoosing] = useState<string>();
+  useEffect(() => {
+    if (choosing === undefined) return;
+    const close = (): void => setChoosing(undefined);
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') close();
+    };
+    document.addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('click', close);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [choosing]);
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const toggle = (id: string): void =>
     setFolded((all) => {
@@ -49,9 +70,42 @@ export function Sidebar({ signedIn, projects, error, active, newSessionId, onSel
                 {isFolded && project.sessions.length > 0 && <span className="count">{project.sessions.length}</span>}
               </button>
               {project.path && (
-                <button type="button" className="project-add" aria-label={`Nouvelle sandbox dans ${project.name}`} title="Nouvelle sandbox" onClick={() => onNewSandbox(project.path)}>
+                <button
+                  type="button"
+                  className="project-add"
+                  aria-label={`Nouvelle session dans ${project.name}`}
+                  aria-haspopup={attachable(project).length > 1 ? 'menu' : undefined}
+                  aria-expanded={choosing === viewId}
+                  title="Nouvelle session"
+                  disabled={busy !== undefined}
+                  onClick={(event) => {
+                    const choices = attachable(project);
+                    const [only, second] = choices;
+                    if (!only) return onNewSandbox(project.path);
+                    if (!second) return onAttach(only);
+                    event.stopPropagation();
+                    setChoosing(choosing === viewId ? undefined : viewId);
+                  }}
+                >
                   +
                 </button>
+              )}
+              {choosing === viewId && (
+                <ul className="choice" role="menu" aria-label={`Sandboxes de ${project.name}`}>
+                  {attachable(project).map((sandbox) => (
+                    <li key={sandbox.name} role="none">
+                      <button type="button" role="menuitem" autoFocus={sandbox === attachable(project)[0]} onClick={() => onAttach(sandbox)}>
+                        <span className="row-label">{sandbox.name}</span>
+                        <span className="row-state">{sandbox.agent}</span>
+                      </button>
+                    </li>
+                  ))}
+                  <li role="none">
+                    <button type="button" role="menuitem" onClick={() => onNewSandbox(project.path)}>
+                      Nouvelle sandbox
+                    </button>
+                  </li>
+                </ul>
               )}
             </div>
             {!isFolded && (

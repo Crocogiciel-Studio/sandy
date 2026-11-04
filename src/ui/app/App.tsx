@@ -100,7 +100,7 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
 
   return (
     <div className="app">
-      <Sidebar signedIn={signedIn} projects={projects} error={sandboxes.error} active={active} newSessionId={NEW} onSelect={select} onClose={close} onNewSandbox={newSandboxOn} />
+      <Sidebar signedIn={signedIn} projects={projects} error={sandboxes.error} active={active} newSessionId={NEW} onSelect={select} onClose={close} onNewSandbox={newSandboxOn} onAttach={(sandbox) => void sandboxes.whileBusy(sandbox, () => attach(sandbox))} busy={sandboxes.busy} />
       <main className="main">
         {running.map((one) => (
           <Terminal
