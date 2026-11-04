@@ -187,7 +187,7 @@ export function Terminal({ session, visible, ended, title, provisional, projectP
           {stateText}
         </span>
       </header>
-      <BlockedHosts sessionId={session.id} ended={ended} />
+      <BlockedHosts sessionId={session.id} active={visible && !ended} />
       <div ref={container} className="terminal-screen" />
       {dropError && (
         <p role="alert" className="error">

@@ -3,14 +3,14 @@ import { displayHost } from './pending-hosts';
 import { useBlockedHosts } from './use-blocked-hosts';
 
 // Non-modal: the agent keeps running while the user decides. Allowing is always for this sandbox only.
-export function BlockedHosts({ sessionId, ended }: { sessionId: string; ended: boolean }) {
-  const { hosts, keepBlocked, allowed } = useBlockedHosts(sessionId, ended);
-  const [error, setError] = useState<string>();
+export function BlockedHosts({ sessionId, active }: { sessionId: string; active: boolean }) {
+  const { hosts, keepBlocked, allowed } = useBlockedHosts(sessionId, active);
+  const [failure, setFailure] = useState<{ host: string; message: string }>();
   const [pending, setPending] = useState<string>();
   if (hosts.length === 0) return null;
 
   async function allow(host: string): Promise<void> {
-    setError(undefined);
+    setFailure(undefined);
     setPending(host);
     const result = await window.sandy.session.allowHost(sessionId, host).catch((cause: unknown) => ({
       ok: false as const,
@@ -18,7 +18,7 @@ export function BlockedHosts({ sessionId, ended }: { sessionId: string; ended: b
     }));
     setPending(undefined);
     if (result.ok) allowed(host);
-    else setError(result.message);
+    else setFailure({ host, message: result.message });
   }
 
   return (
@@ -37,13 +37,13 @@ export function BlockedHosts({ sessionId, ended }: { sessionId: string; ended: b
             </button>
           </div>
           <p className="quiet">The agent will be able to send and receive data to this domain, with no time limit.</p>
+          {failure?.host === host && (
+            <p role="alert" className="error">
+              {failure.message}
+            </p>
+          )}
         </div>
       ))}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
     </div>
   );
 }

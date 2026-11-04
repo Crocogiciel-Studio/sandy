@@ -34,6 +34,17 @@ describe('listBlockedHosts', () => {
   });
 });
 
+describe('hosts allowed from sandy', () => {
+  it('are no longer listed nor allowed twice, although the log still reports them blocked', async () => {
+    const { sandbox, allowed } = setup();
+    const done = new Set(['crocogiciel.com:443']);
+
+    expect(await listBlockedHosts(sandbox, 'claude-app', 100, done)).toEqual([]);
+    await expect(allowBlockedHost(sandbox, { name: 'claude-app', host: 'crocogiciel.com:443', since: 100, allowed: done })).rejects.toThrow('not blocked');
+    expect(allowed).toEqual([]);
+  });
+});
+
 describe('allowBlockedHost', () => {
   it('allows a blocked host for its sandbox', async () => {
     const { sandbox, allowed } = setup();

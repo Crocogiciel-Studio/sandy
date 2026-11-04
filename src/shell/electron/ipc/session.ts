@@ -27,7 +27,7 @@ const IMAGE_EXTENSIONS: Record<string, string> = { 'image/png': 'png', 'image/jp
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: TerminalProvider }): void {
-  const sessions = new Map<string, { sandboxName: string; projectPath: string; startedAt: number }>();
+  const sessions = new Map<string, { sandboxName: string; projectPath: string; startedAt: number; allowedHosts: Set<string> }>();
   deps.terminal.onExit((id) => sessions.delete(id));
 
   ipcMain.handle('session:pick-project', async (event) => {
@@ -48,7 +48,7 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
       // Every launch is a new sandbox: re-attaching an existing one is "new session" on its row.
       const suffix = randomUUID().slice(0, 6);
       const id = await startSession(deps, { agent, projectPath, cols, rows, suffix });
-      sessions.set(id, { sandboxName: sessionName(agent, projectPath, suffix), projectPath, startedAt: Date.now() });
+      sessions.set(id, { sandboxName: sessionName(agent, projectPath, suffix), projectPath, startedAt: Date.now(), allowedHosts: new Set() });
       return { ok: true, id };
     } catch (error) {
       if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} is not installed.` };
@@ -85,7 +85,7 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
     if (typeof name !== 'string' || !isSize(cols) || !isSize(rows)) return { ok: false, message: 'Invalid session request.' };
     try {
       const { id, sandbox } = await attachSession(deps, { name, cols, rows });
-      sessions.set(id, { sandboxName: sandbox.name, projectPath: sandbox.workspaces[0] ?? '', startedAt: Date.now() });
+      sessions.set(id, { sandboxName: sandbox.name, projectPath: sandbox.workspaces[0] ?? '', startedAt: Date.now(), allowedHosts: new Set() });
       return { ok: true, id };
     } catch (error) {
       if (error instanceof CommandNotFoundError) return { ok: false, message: `${error.command} is not installed.` };
@@ -98,7 +98,7 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
     const session = typeof id === 'string' ? sessions.get(id) : undefined;
     if (!session) return { ok: false, message: 'Invalid request.' };
     try {
-      return { ok: true, hosts: await listBlockedHosts(deps.sandbox, session.sandboxName, session.startedAt) };
+      return { ok: true, hosts: await listBlockedHosts(deps.sandbox, session.sandboxName, session.startedAt, session.allowedHosts) };
     } catch (error) {
       return { ok: false, message: error instanceof Error ? error.message : String(error) };
     }
@@ -108,7 +108,8 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
     const session = typeof id === 'string' ? sessions.get(id) : undefined;
     if (!session || typeof host !== 'string') return { ok: false, message: 'Invalid request.' };
     try {
-      await allowBlockedHost(deps.sandbox, { name: session.sandboxName, host, since: session.startedAt });
+      await allowBlockedHost(deps.sandbox, { name: session.sandboxName, host, since: session.startedAt, allowed: session.allowedHosts });
+      session.allowedHosts.add(host);
       return { ok: true };
     } catch (error) {
       return { ok: false, message: error instanceof Error ? error.message : String(error) };
