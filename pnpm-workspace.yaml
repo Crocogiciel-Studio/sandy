@@ -1,5 +1,6 @@
 onlyBuiltDependencies:
   - electron
+  - electron-winstaller
   - node-pty
 # GHSA-g3hv-75wg-m249: electron-builder still pins minimatch 9/10, fixed in 11.0.1. Build-time only.
 overrides:
