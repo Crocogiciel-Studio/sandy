@@ -33,6 +33,8 @@ function createWindow(terminal: NodePtyTerminal): void {
 }
 
 void app.whenReady().then(() => {
+  // Packaged builds get their icon from electron-builder; in dev the dock would show Electron's.
+  if (!app.isPackaged) app.dock?.setIcon(join(app.getAppPath(), 'build/icon.png'));
   const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'));
   registerTerminalIpc(terminal);
   const sandbox = new SbxSandboxProvider();
