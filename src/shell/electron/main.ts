@@ -5,6 +5,7 @@ import { NodePtyTerminal } from '../../adapters/terminal/node-pty/node-pty-termi
 import { registerSbxIpc } from './ipc/sbx';
 import { registerSessionIpc } from './ipc/session';
 import { registerTerminalIpc } from './ipc/terminal';
+import { hostPaths } from '../../pty-host/paths';
 import { quitPrompt } from './quit-guard';
 import { createTray } from './tray';
 
@@ -68,7 +69,7 @@ if (!app.requestSingleInstanceLock()) {
 function start(): void {
   // Packaged builds get their icon from electron-builder; in dev the dock would show Electron's.
   if (!app.isPackaged) app.dock?.setIcon(join(app.getAppPath(), 'build/icon.png'));
-  const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'));
+  const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'), hostPaths(app.getPath('userData')));
   registerTerminalIpc(terminal);
   const sandbox = new SbxSandboxProvider();
   registerSbxIpc({ sandbox, terminal });
