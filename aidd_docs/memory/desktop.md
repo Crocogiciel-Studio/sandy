@@ -4,6 +4,11 @@
 
 - Electron. Le process principal vit dans `src/shell/electron`, le PTY dans un `utilityProcess` (`src/pty-host`), relié par MessagePort.
 
+## Window and quit
+
+- Fermer la fenêtre la masque (elle n'est pas détruite) : les terminaux xterm et la liste des sessions vivent dans le renderer, donc les sessions continuent et reviennent intactes. Quitter est le seul geste qui arrête les agents, avec confirmation s'il y en a.
+- Windows et Linux : pas de Dock, une icône de zone de notification (`tray.ts`) rouvre la fenêtre. L'icône est livrée hors asar (`extraResources`).
+
 ## Native access
 
 - Process `sbx` lancés via `child_process` et `node-pty`, uniquement depuis les adapters.

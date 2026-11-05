@@ -5,6 +5,10 @@ directories:
 files:
   - out/**
   - package.json
+# The tray icon is read from disk, so it must sit outside the asar.
+extraResources:
+  - from: build/icon.png
+    to: icon.png
 # node-pty is native: it must stay outside the asar. It ships N-API prebuilds for every
 # platform and arch, so nothing needs recompiling for Electron.
 npmRebuild: false

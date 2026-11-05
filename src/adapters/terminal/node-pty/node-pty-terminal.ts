@@ -35,6 +35,10 @@ export class NodePtyTerminal implements TerminalProvider {
     this.send({ type: 'close', id });
   }
 
+  runningCount(): number {
+    return this.running.size;
+  }
+
   closeAll(): void {
     for (const id of this.running) this.close(id);
   }

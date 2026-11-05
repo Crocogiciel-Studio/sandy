@@ -1,0 +1,19 @@
+import { join } from 'node:path';
+import { app, Menu, nativeImage, Tray } from 'electron';
+
+// Held for the app's lifetime: a Tray nobody references is garbage-collected and its icon vanishes.
+let tray: Tray | undefined;
+
+// Windows and Linux have no Dock: once the window is hidden, the tray is the way back.
+export function createTray(show: () => void): void {
+  const file = app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(app.getAppPath(), 'build/icon.png');
+  tray = new Tray(nativeImage.createFromPath(file).resize({ width: 16, height: 16 }));
+  tray.setToolTip('Sandy');
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: 'Show Sandy', click: show },
+      { label: 'Quit', click: () => app.quit() },
+    ]),
+  );
+  tray.on('click', show);
+}
