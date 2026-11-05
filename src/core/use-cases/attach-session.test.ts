@@ -28,6 +28,8 @@ function setup(sandboxes: SandboxInfo[]) {
     close: () => {},
     onData: () => () => {},
     onExit: () => () => {},
+    list: async () => [],
+    attach: async () => ({ cols: 80, rows: 24, data: '' }),
   };
   return { deps: { sandbox, terminal }, opened };
 }
@@ -39,7 +41,7 @@ describe('attachSession', () => {
     const result = await attachSession(deps, { name: 'claude-app', cols: 80, rows: 24 });
 
     expect(result).toEqual({ id: 'terminal-1', sandbox: existing });
-    expect(opened).toEqual([{ command: 'sbx', args: ['run', '--name', 'claude-app'], cwd: '/work/app', cols: 80, rows: 24 }]);
+    expect(opened).toEqual([{ command: 'sbx', args: ['run', '--name', 'claude-app'], cwd: '/work/app', cols: 80, rows: 24, meta: { sandboxName: 'claude-app', projectPath: '/work/app', agent: 'claude' } }]);
   });
 
   it('rejects an unknown sandbox without opening a terminal', async () => {

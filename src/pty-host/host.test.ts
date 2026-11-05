@@ -1,7 +1,7 @@
 import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 import type { PtyEvent, PtyRequest } from '../contracts/pty-messages';
-import { createPtyHost } from './index';
+import { createPtyHost } from './host';
 
 function startHost() {
   const events: PtyEvent[] = [];

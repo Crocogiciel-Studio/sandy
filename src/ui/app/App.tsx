@@ -1,6 +1,6 @@
 import './app.css';
-import { useEffect, useState } from 'react';
-import type { SandboxSummary, StartSessionResult } from '../../contracts/api';
+import { useEffect, useRef, useState } from 'react';
+import type { SandboxSummary } from '../../contracts/api';
 import { LaunchSession, type LaunchRequest } from '../features/sessions/LaunchSession';
 import { ProjectPage } from '../features/sessions/ProjectPage';
 import { buildProjects, projectViewId } from '../features/sessions/projects';
@@ -12,7 +12,7 @@ import { SbxSetup } from '../features/onboarding/SbxSetup';
 import { SignInSetup } from '../features/onboarding/SignInSetup';
 import { useSbxStatus } from '../features/onboarding/use-sbx-status';
 import { useSignIn } from '../features/onboarding/use-sign-in';
-import { openTerminal, Terminal } from '../features/terminal/Terminal';
+import { openTerminal, Terminal, type StartedTerminal } from '../features/terminal/Terminal';
 
 const NEW = 'new';
 
@@ -39,8 +39,10 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
   async function open(
     agent: string,
     projectPath: string,
-    start: (cols: number, rows: number) => Promise<StartSessionResult>,
-  ): Promise<void> {
+    start: (cols: number, rows: number) => Promise<StartedTerminal>,
+    // The restored sessions leave the choice of the active one to the caller.
+    activate = true,
+  ): Promise<string | undefined> {
     setError(undefined);
     const result = await openTerminal(start, (id, exitCode) => {
       setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, exitCode } : one)));
@@ -52,7 +54,10 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
       if (title) setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, title } : one)));
     },
     );
-    if (!result.ok) return setError(result.message);
+    if (!result.ok) {
+      setError(result.message);
+      return undefined;
+    }
     // Two sessions of the same agent on the same project must stay tellable apart.
     setRunning((all) => {
       const base = agent;
@@ -60,15 +65,43 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
       return [...all, { label: same ? `${base} (${same + 1})` : base, projectPath, session: result.session }];
     });
     setLaunchPath(undefined);
-    setActive(result.session.id);
+    if (activate) setActive(result.session.id);
     void refresh(true);
+    return result.session.id;
   }
 
-  const launch = ({ agent, projectPath }: LaunchRequest): Promise<void> =>
-    open(agent, projectPath, (cols, rows) => window.sandy.session.start({ agent, projectPath, cols, rows }));
+  // Sessions kept running by the terminal host while sandy was closed come back with their screen.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    void (async () => {
+      const ids: string[] = [];
+      for (const { id, agent, projectPath } of await window.sandy.session.listLive()) {
+        const opened = await open(
+          agent,
+          projectPath,
+          async () => {
+            const screen = await window.sandy.terminal.attach(id);
+            return screen.ok ? { ok: true, id, screen } : screen;
+          },
+          false,
+        );
+        if (opened) ids.push(opened);
+      }
+      const [first] = ids;
+      if (first) setActive((current) => (current === NEW ? first : current));
+    })();
+    // Once, at startup: `open` is recreated on every render.
+  }, []);
 
-  const attach = ({ name, agent, workspaces }: SandboxSummary): Promise<void> =>
-    open(agent, workspaces[0] ?? name, (cols, rows) => window.sandy.session.attach({ name, cols, rows }));
+  const launch = async ({ agent, projectPath }: LaunchRequest): Promise<void> => {
+    await open(agent, projectPath, (cols, rows) => window.sandy.session.start({ agent, projectPath, cols, rows }));
+  };
+
+  const attach = async ({ name, agent, workspaces }: SandboxSummary): Promise<void> => {
+    await open(agent, workspaces[0] ?? name, (cols, rows) => window.sandy.session.attach({ name, cols, rows }));
+  };
 
   function close(one: OpenSession): void {
     window.sandy.terminal.close(one.session.id);

@@ -8,6 +8,7 @@ import type {
   AttachSessionRequest,
   BlockedHostsResult,
   ListSandboxesResult,
+  LiveSession,
   PrepareDropResult,
   StartSessionRequest,
   StartSessionResult,
@@ -35,6 +36,19 @@ export function registerSessionIpc(deps: { sandbox: SandboxProvider; terminal: T
     const options = { properties: ['openDirectory' as const] };
     const result = await (window ? dialog.showOpenDialog(window, options) : dialog.showOpenDialog(options));
     return result.canceled ? undefined : result.filePaths[0];
+  });
+
+  // The host keeps sessions across app restarts: rebuild what this process knows about them from their metadata.
+  // Sessions without it (the sign-in terminal) are not agent sessions.
+  ipcMain.handle('session:list-live', async (): Promise<LiveSession[]> => {
+    const live: LiveSession[] = [];
+    for (const { id, meta, startedAt } of await deps.terminal.list()) {
+      const { sandboxName, projectPath, agent } = meta;
+      if (!sandboxName || !projectPath || !agent) continue;
+      if (!sessions.has(id)) sessions.set(id, { sandboxName, projectPath, startedAt, allowedHosts: new Set() });
+      live.push({ id, agent, projectPath });
+    }
+    return live;
   });
 
   ipcMain.handle('session:list-agents', () => [...deps.sandbox.listAgents()]);

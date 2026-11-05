@@ -1,4 +1,5 @@
 import { BrowserWindow, ipcMain } from 'electron';
+import type { AttachTerminalResult } from '../../../contracts/api';
 import type { TerminalProvider } from '../../../core/ports/terminal-provider';
 
 export function registerTerminalIpc(terminal: TerminalProvider): void {
@@ -13,6 +14,14 @@ export function registerTerminalIpc(terminal: TerminalProvider): void {
   });
   ipcMain.on('terminal:resize', (_event, id: unknown, cols: unknown, rows: unknown) => {
     if (typeof id === 'string' && isSize(cols) && isSize(rows)) terminal.resize(id, cols, rows);
+  });
+  ipcMain.handle('terminal:attach', async (_event, id: unknown): Promise<AttachTerminalResult> => {
+    if (typeof id !== 'string') return { ok: false, message: 'Invalid request.' };
+    try {
+      return { ok: true, ...(await terminal.attach(id)) };
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : String(error) };
+    }
   });
   ipcMain.on('terminal:close', (_event, id: unknown) => {
     if (typeof id === 'string') terminal.close(id);
