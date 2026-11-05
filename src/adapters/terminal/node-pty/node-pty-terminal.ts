@@ -25,6 +25,10 @@ export class NodePtyTerminal implements TerminalProvider {
   private readonly attaching = new Map<string, Attaching>();
   private readonly listing: Array<(sessions: SessionInfo[]) => void> = [];
   private readonly running = new Set<string>();
+  // Sessions whose output the app may forward: opened here, or attached (their screen already sent).
+  // Output of a listed session before its attach is in its screen: forwarding it too would draw it twice.
+  private readonly bound = new Set<string>();
+  private readonly attaches = new Map<string, Promise<TerminalScreen>>();
   private readonly dataListeners = new Set<(id: string, data: string) => void>();
   private readonly exitListeners = new Set<(id: string, exitCode: number) => void>();
 
@@ -75,10 +79,16 @@ export class NodePtyTerminal implements TerminalProvider {
   async attach(id: string): Promise<TerminalScreen> {
     const connection = await this.reuse();
     if (!connection) throw new Error('The terminal host is not running.');
-    return new Promise((resolve, reject) => {
+    // One attach at a time per session: a second would replace the first one's queue on the host.
+    const running = this.attaches.get(id);
+    if (running) return running;
+    this.bound.delete(id);
+    const attach = new Promise<TerminalScreen>((resolve, reject) => {
       this.attaching.set(id, { resolve, reject });
       connection.send({ type: 'attach', id });
-    });
+    }).finally(() => this.attaches.delete(id));
+    this.attaches.set(id, attach);
+    return attach;
   }
 
   runningCount(): number {
@@ -203,10 +213,12 @@ export class NodePtyTerminal implements TerminalProvider {
       case 'hello-refused':
         return;
       case 'data':
+        if (!this.bound.has(event.id)) return;
         this.dataListeners.forEach((listener) => listener(event.id, event.data));
         return;
       case 'exit':
         this.running.delete(event.id);
+        this.bound.delete(event.id);
         this.exitListeners.forEach((listener) => listener(event.id, event.exitCode));
         return;
       case 'sessions':
@@ -215,6 +227,7 @@ export class NodePtyTerminal implements TerminalProvider {
       case 'snapshot': {
         const attaching = this.attaching.get(event.id);
         this.attaching.delete(event.id);
+        this.bound.add(event.id);
         attaching?.resolve({ cols: event.cols, rows: event.rows, data: event.data });
         return;
       }
@@ -228,6 +241,7 @@ export class NodePtyTerminal implements TerminalProvider {
         const pending = this.pending.get(event.id);
         this.pending.delete(event.id);
         this.running.add(event.id);
+        this.bound.add(event.id);
         pending?.resolve(event.id);
         return;
       }

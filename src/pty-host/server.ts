@@ -32,7 +32,6 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
   if (process.platform !== 'win32') rmSync(paths.socket, { force: true });
 
   const token = randomBytes(32).toString('hex');
-  writeFileSync(paths.token, token, { mode: 0o600 });
 
   // `attaching`: sessions whose snapshot is not sent yet. Their live events wait, so a snapshot is never overtaken.
   interface Client {
@@ -113,6 +112,8 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
     server.listen(paths.socket, resolve);
   });
   if (process.platform !== 'win32') chmodSync(paths.socket, 0o600);
+  // Only once listening: a host that lost the race for the socket must not overwrite the winner's token.
+  writeFileSync(paths.token, token, { mode: 0o600 });
   checkIdle();
 
   let closed = false;

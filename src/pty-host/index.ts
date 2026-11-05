@@ -6,5 +6,5 @@ const hostDir = process.env['SANDY_PTY_HOST_DIR'];
 if (hostDir) {
   void startHostServer({ paths: hostPaths(hostDir), onClosed: () => process.exit(0) }).then((server) => {
     if (!server) process.exit(0);
-  });
+  }, () => process.exit(1));
 }

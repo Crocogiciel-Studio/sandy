@@ -258,5 +258,25 @@ describe('pty-host server', () => {
 
       await waitFor(() => (closed.value ? true : undefined));
     });
+  
+    it('forwards the output of a listed session only once it is attached', async () => {
+      const { paths } = await start();
+      const direct = await client(paths);
+      direct.connection.send(open('a', { args: ['-e', 'setInterval(() => console.log("tick"), 40)'] }));
+      await waitFor(() => direct.messages.find((m) => m.type === 'data'));
+      const terminal = new NodePtyTerminal('unused', paths);
+      const seen: string[] = [];
+      terminal.onData((_id, data) => seen.push(data));
+      await terminal.inspectHost();
+      await terminal.list();
+
+      await new Promise((wake) => setTimeout(wake, 250));
+      expect(seen).toEqual([]);
+
+      const [first, second] = await Promise.all([terminal.attach('a'), terminal.attach('a')]);
+      expect(first).toEqual(second);
+      await waitFor(() => (seen.length > 0 ? true : undefined));
+      terminal.disconnect();
+    });
   });
 });
