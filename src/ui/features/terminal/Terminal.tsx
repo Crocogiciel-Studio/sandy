@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FitAddon } from '@xterm/addon-fit';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { Terminal as XTerm } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import type { PrepareDropResult, StartSessionResult } from '../../../contracts/api';
@@ -31,7 +32,13 @@ export async function openTerminal(
   onTitle: (id: string, title: string) => void = () => undefined,
 ): Promise<{ ok: true; session: TerminalSession } | { ok: false; message: string }> {
   const { terminal } = window.sandy;
-  const xterm = new XTerm({ cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
+  // The font is loaded lazily: xterm measures its cells once, so a fallback font at that moment
+  // skews every column until the next resize.
+  await document.fonts.load(`13px ${terminalFont()}`).catch(() => undefined);
+  const xterm = new XTerm({ allowProposedApi: true, cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
+  // Agents lay out their status bars with recent Unicode widths (emoji take two cells).
+  xterm.loadAddon(new Unicode11Addon());
+  xterm.unicode.activeVersion = '11';
   const offTheme = followSystemTheme((theme) => {
     xterm.options.theme = theme;
   });
