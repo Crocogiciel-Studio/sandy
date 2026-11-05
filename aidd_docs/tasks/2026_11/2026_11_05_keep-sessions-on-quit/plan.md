@@ -1,6 +1,6 @@
 ---
 objective: "Quitting sandy leaves agent sessions running in a detached host; relaunching sandy shows them again with their screen, and an explicit stop leaves no orphan process."
-status: in-progress
+status: implemented
 ---
 
 # Plan: keep sessions when sandy quits

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: restore sessions in the UI
@@ -34,7 +34,7 @@ aidd_docs/memory/codebase-map.md                       ✏️
 
 > Expose the live sessions to the renderer.
 
-1. `SessionApi.listLive()`; `TerminalApi.attach(id, cols, rows): Promise<string>`; preload and `ipc` handlers with the same argument validation as `isSize`.
+1. `SessionApi.listLive()`; `TerminalApi.attach(id): Promise<AttachTerminalResult>`; preload and `ipc` handlers with the same argument validation as `isSize`.
 
 ### `2)` Restore on startup
 

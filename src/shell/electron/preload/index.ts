@@ -12,6 +12,7 @@ const api: SandyApi = {
     write: (id, data) => ipcRenderer.send('terminal:write', id, data),
     resize: (id, cols, rows) => ipcRenderer.send('terminal:resize', id, cols, rows),
     close: (id) => ipcRenderer.send('terminal:close', id),
+    attach: (id) => ipcRenderer.invoke('terminal:attach', id),
     onData: (listener) => subscribe('terminal:data', listener),
     onExit: (listener) => subscribe('terminal:exit', listener),
   },

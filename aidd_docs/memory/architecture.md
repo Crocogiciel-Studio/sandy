@@ -4,7 +4,7 @@
 
 - TypeScript partout, sur Electron : une seule langue pour l'UI et le process principal, et le Chromium embarqué donne un rendu identique sur macOS, Windows et Linux.
 - React + Vite (`electron-vite`) pour l'UI, xterm.js pour les terminaux.
-- `node-pty` pour les PTY, isolé dans un `utilityProcess`.
+- `node-pty` pour les PTY, dans un processus détaché (`pty-host`) qui survit à l'app.
 - pnpm comme gestionnaire de paquets.
 
 ## How it fits together
@@ -19,7 +19,7 @@ flowchart LR
   end
   ADP[Adapters] -.implémentent.-> PORTS
   ADP --> CLI[[sbx CLI]]
-  ADP --> PTYH["PTY host (utilityProcess)"] --> CLI
+  ADP --> PTYH["PTY host (processus détaché, socket)"] --> CLI
 ```
 
 ## Key decisions
@@ -31,8 +31,12 @@ flowchart LR
 - **Réutiliser avant de construire** : avant chaque fonctionnalité, chercher une brique open source maintenue à intégrer.
 - **Sécurité Electron** : `contextIsolation`, `sandbox`, pas de `nodeIntegration`. Le renderer ne voit que l'API exposée par le preload.
 
+- **Les sessions survivent à l'app.** Le `pty-host` est le binaire Electron lancé en Node (`ELECTRON_RUN_AS_NODE`, `detached`), joint par socket Unix (tube nommé sous Windows) avec un jeton et une version de protocole. Il garde l'écran de chaque session (`@xterm/headless` + `addon-serialize`) pour le rejouer à la reconnexion, et s'arrête seul sans session ni client (30 s) ou sur `shutdown`.
+
 ## Gotchas
 
+- Le `pty-host` est un processus long : un changement de forme d'un message exige de monter `PROTOCOL_VERSION` (`hello` et `shutdown` ne changent jamais, pour qu'une version puisse en arrêter une autre). Un hôte d'une autre version n'est jamais piloté, seulement arrêté sur demande.
+- Son environnement vient du client à chaque `open` (PATH compris), pas du sien : il a été lancé il y a peut-être des jours.
 - `sbx` n'exige plus Docker Desktop : l'onboarding détecte `sbx`, pas Docker Desktop.
 - Aucune commande sandbox ne marche sans `sbx login` : la connexion Docker fait partie de l'onboarding.
 - `sbx` change vite, avec des breaking changes fréquents, et ses formats JSON ne sont pas documentés : l'adapter `sbx` fige ces formats par des tests de contrat, et sandy vérifie la version via `sbx version --json` au démarrage.

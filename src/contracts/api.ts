@@ -10,6 +10,8 @@ export interface TerminalApi {
   write(id: string, data: string): void;
   resize(id: string, cols: number, rows: number): void;
   close(id: string): void;
+  // The screen of a session that kept running without this window. Live data for it arrives only after this resolves.
+  attach(id: string): Promise<AttachTerminalResult>;
   onData(listener: (id: string, data: string) => void): () => void;
   onExit(listener: (id: string, exitCode: number) => void): () => void;
 }
@@ -47,6 +49,9 @@ export interface StartSessionRequest {
   cols: number;
   rows: number;
 }
+
+// `data` redraws the session in a terminal of `cols` x `rows`.
+export type AttachTerminalResult = { ok: true; cols: number; rows: number; data: string } | { ok: false; message: string };
 
 export interface LiveSession {
   id: string;

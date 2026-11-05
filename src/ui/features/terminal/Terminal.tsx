@@ -23,10 +23,13 @@ export interface TerminalSession {
   dispose(): void;
 }
 
+// A started session, with the screen to redraw first when it was already running.
+export type StartedTerminal = StartSessionResult | { ok: true; id: string; screen: { cols: number; rows: number; data: string } };
+
 // Starts a session and wires it to a fresh xterm before any output can be missed.
 // The xterm lives outside React so StrictMode remounts do not lose output.
 export async function openTerminal(
-  start: (cols: number, rows: number) => Promise<StartSessionResult>,
+  start: (cols: number, rows: number) => Promise<StartedTerminal>,
   onExit: (id: string, exitCode: number) => void,
   onActivity: (id: string, activity: Activity) => void,
   onTitle: (id: string, title: string) => void = () => undefined,
@@ -82,6 +85,12 @@ export async function openTerminal(
   }
   started.id = result.id;
   activityOf.id = result.id;
+  // A session that kept running: the xterm takes the size its screen was drawn at, then the screen,
+  // before the output that arrived while attaching.
+  if ('screen' in result) {
+    xterm.resize(result.screen.cols, result.screen.rows);
+    xterm.write(result.screen.data);
+  }
   early.splice(0).forEach((deliver) => deliver());
   xterm.onData((data) => terminal.write(result.id, data));
   // Cmd/Ctrl/Shift+Enter inserts a newline instead of submitting; xterm alone cannot tell them apart.
