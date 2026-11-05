@@ -23,6 +23,8 @@ const api: SandyApi = {
     stopSandbox: (name) => ipcRenderer.invoke('session:stop-sandbox', name),
     removeSandbox: (name) => ipcRenderer.invoke('session:remove-sandbox', name),
     attach: (request) => ipcRenderer.invoke('session:attach', request),
+    blockedHosts: (id) => ipcRenderer.invoke('session:blocked-hosts', id),
+    allowHost: (id, host) => ipcRenderer.invoke('session:allow-host', id, host),
     prepareDrop: (id, hostPaths) => ipcRenderer.invoke('session:prepare-drop', id, hostPaths),
     pasteImage: (id, image, mimeType) => ipcRenderer.invoke('session:paste-image', id, image, mimeType),
   },

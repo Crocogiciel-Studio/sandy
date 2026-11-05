@@ -26,6 +26,10 @@ export interface SessionApi {
   attach(request: AttachSessionRequest): Promise<StartSessionResult>;
   // Makes dropped host files reachable by the session's agent; resolves with the paths to type.
   prepareDrop(id: string, hostPaths: string[]): Promise<PrepareDropResult>;
+  // Hosts (`name[:port]`) the session's agent tried to reach and sbx still blocks for its sandbox.
+  blockedHosts(id: string): Promise<BlockedHostsResult>;
+  // Allows one of those hosts for the session's sandbox only; refused if it is not blocked right now.
+  allowHost(id: string, host: string): Promise<ActionResult>;
   // Same for a clipboard image (png, jpeg, gif or webp): resolves with the sandbox path to type.
   pasteImage(id: string, image: ArrayBuffer, mimeType: string): Promise<PrepareDropResult>;
 }
@@ -43,6 +47,8 @@ export interface StartSessionRequest {
 }
 
 export type StartSessionResult = { ok: true; id: string } | { ok: false; message: string };
+
+export type BlockedHostsResult = { ok: true; hosts: string[] } | { ok: false; message: string };
 
 export type PrepareDropResult = { ok: true; paths: string[] } | { ok: false; message: string };
 

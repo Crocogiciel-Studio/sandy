@@ -2,11 +2,13 @@ import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
+import type { PolicyLog } from '../../../core/domain/blocked-domain';
 import type { SandboxInfo, SandboxProvider, SessionCommand, SignInState } from '../../../core/ports/sandbox-provider';
 import { searchDirs } from '../../../pty-host/search-dirs';
 import { agentArgs } from './agent-hooks';
 import { parseSignIn } from './sbx-diagnose';
 import { parseSandboxList } from './sbx-list';
+import { parsePolicyLog } from './sbx-policy-log';
 import { parseSbxVersionOutput } from './sbx-version';
 
 // Built-in agents listed by `sbx run --help` (latest observed); sbx exposes no JSON list.
@@ -104,6 +106,16 @@ export class SbxSandboxProvider implements SandboxProvider {
 
   async remove(name: string): Promise<void> {
     await this.run(['rm', '-f', name]);
+  }
+
+  // --limit applies to each list; generous so a chatty host does not push a recent block out.
+  async policyLog(name: string): Promise<PolicyLog> {
+    return parsePolicyLog(await this.run(['policy', 'log', name, '--json', '--limit', '500']));
+  }
+
+  // Always --sandbox: without it sbx adds a global rule. Names and hosts are validated by the use case.
+  async allowHost({ name, host }: { name: string; host: string }): Promise<void> {
+    await this.run(['policy', 'allow', 'network', '--sandbox', name, host]);
   }
 
   attachCommand({ name, agent }: { name: string; agent: string }): SessionCommand {

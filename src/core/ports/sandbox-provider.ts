@@ -1,3 +1,5 @@
+import type { PolicyLog } from '../domain/blocked-domain';
+
 export interface SessionCommand {
   command: string;
   args: string[];
@@ -31,6 +33,10 @@ export interface SandboxProvider {
   // Both reject when sbx fails.
   stop(name: string): Promise<void>;
   remove(name: string): Promise<void>;
+  // The network decisions sbx logged for one sandbox, cumulative. Rejects when sbx fails.
+  policyLog(name: string): Promise<PolicyLog>;
+  // Allows `host` (name[:port]) for this sandbox only, never globally. Rejects when sbx fails.
+  allowHost(request: { name: string; host: string }): Promise<void>;
   // Re-attaches the agent of an existing sandbox.
   attachCommand(request: { name: string; agent: string }): SessionCommand;
 }

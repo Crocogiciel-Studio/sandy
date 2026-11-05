@@ -1,0 +1,62 @@
+{
+  "allowed": [
+    {
+      "sandbox_id": "claude-app",
+      "host": "api.github.com:443",
+      "proxy_type": "forward",
+      "count": 105,
+      "first_seen": "2026-11-04T22:09:13.202772+01:00",
+      "last_seen": "2026-11-05T00:46:42.272076+01:00"
+    },
+    {
+      "sandbox_id": "claude-app",
+      "host": "hub.docker.com:443",
+      "proxy_type": "forward-bypass",
+      "rule": "<dial failed>",
+      "count": 1,
+      "first_seen": "2026-11-05T00:43:02.455241+01:00",
+      "last_seen": "2026-11-05T00:43:02.455241+01:00"
+    },
+    {
+      "sandbox_id": "claude-app",
+      "host": "mcp-gateway.docker.internal:80",
+      "proxy_type": "forward",
+      "rule": "<daemon-managed alias>",
+      "count": 46,
+      "first_seen": "2026-11-04T22:09:13.066669+01:00",
+      "last_seen": "2026-11-05T00:41:27.115686+01:00"
+    }
+  ],
+  "blocked": [
+    {
+      "sandbox_id": "claude-app",
+      "host": "http-intake.logs.us5.datadoghq.com:443",
+      "proxy_type": "forward",
+      "rule": "no applicable policies for op(action=net:connect:tcp, resource=net:domain:http-intake.logs.us5.datadoghq.com:443)",
+      "reason": "No matching allow rule (default deny)",
+      "count": 304,
+      "first_seen": "2026-11-04T22:09:10.987842+01:00",
+      "last_seen": "2026-11-05T00:46:50.635702+01:00"
+    },
+    {
+      "sandbox_id": "claude-app",
+      "host": "crocogiciel.com:443",
+      "proxy_type": "forward",
+      "rule": "no applicable policies for op(action=net:connect:tcp, resource=net:domain:crocogiciel.com:443)",
+      "reason": "No matching allow rule (default deny)",
+      "count": 1,
+      "first_seen": "2026-11-05T00:46:40.481218+01:00",
+      "last_seen": "2026-11-05T00:46:40.481218+01:00"
+    },
+    {
+      "sandbox_id": "claude-app",
+      "host": "mcp.slack.com:443",
+      "proxy_type": "forward",
+      "rule": "no applicable policies for op(action=net:connect:tcp, resource=net:domain:mcp.slack.com:443)",
+      "reason": "No matching allow rule (default deny)",
+      "count": 2,
+      "first_seen": "2026-11-04T22:09:13.078057+01:00",
+      "last_seen": "2026-11-04T22:09:13.350469+01:00"
+    }
+  ]
+}
