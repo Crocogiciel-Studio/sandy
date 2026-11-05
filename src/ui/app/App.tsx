@@ -12,6 +12,7 @@ import { SbxSetup } from '../features/onboarding/SbxSetup';
 import { SignInSetup } from '../features/onboarding/SignInSetup';
 import { useSbxStatus } from '../features/onboarding/use-sbx-status';
 import { useSignIn } from '../features/onboarding/use-sign-in';
+import { noticeFor } from '../features/terminal/notify-transition';
 import { openTerminal, Terminal, type StartedTerminal } from '../features/terminal/Terminal';
 
 const NEW = 'new';
@@ -36,6 +37,28 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
   const sandboxes = useSandboxes();
   const { refresh } = sandboxes;
 
+  // Event callbacks outlive the render that created them: they read the latest state through these.
+  const latest = useRef({ running, active });
+  latest.current = { running, active };
+
+  // Tells the user a session needs them, unless they are looking at it.
+  function notifyChange(id: string, change: Pick<OpenSession, 'activity' | 'exitCode'>): void {
+    const one = latest.current.running.find((other) => other.session.id === id);
+    if (!one) return;
+    const looking = latest.current.active === id && document.hasFocus();
+    const notice = noticeFor({ previous: sessionState(one), next: sessionState({ ...one, ...change }), looking, name: displayName(one), exitCode: change.exitCode });
+    if (notice) window.sandy.notification.notify(id, notice.title, notice.body);
+  }
+
+  // A click on a notification brings the session it names to the front, if it is still open.
+  useEffect(
+    () =>
+      window.sandy.notification.onOpenSession((id) => {
+        if (latest.current.running.some((one) => one.session.id === id)) setActive(id);
+      }),
+    [],
+  );
+
   async function open(
     agent: string,
     projectPath: string,
@@ -45,10 +68,14 @@ function Sessions({ signedIn }: { signedIn: boolean }) {
   ): Promise<string | undefined> {
     setError(undefined);
     const result = await openTerminal(start, (id, exitCode) => {
+      notifyChange(id, { exitCode });
       setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, exitCode } : one)));
       void refresh(true);
     },
-    (id, activity) => setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, activity } : one))),
+    (id, activity) => {
+      notifyChange(id, { activity });
+      setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, activity } : one)));
+    },
     (id, raw) => {
       const title = parseTitle(raw, agent);
       if (title) setRunning((all) => all.map((one) => (one.session.id === id ? { ...one, title } : one)));

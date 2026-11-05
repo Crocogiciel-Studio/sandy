@@ -12,6 +12,13 @@
 - Un hôte laissé par une autre version de sandy (mise à jour) ne peut pas être repris : sandy propose de l'arrêter ou de quitter.
 - Windows et Linux : pas de Dock, une icône de zone de notification (`tray.ts`) rouvre la fenêtre. L'icône est livrée hors asar (`extraResources`).
 
+## Notifications
+
+- Le renderer décide (`notify-transition.ts`), le shell affiche (`ipc/notification.ts`, `Notification` d'Electron) : seul le renderer connaît la session active et le focus.
+- Une notification quand une session passe à `waiting`, `attention` ou se termine, sauf si la fenêtre a le focus sur cette session. Les agents sans hooks n'ont que la sortie.
+- Un clic affiche la fenêtre et active la session, si elle est encore ouverte.
+- Limite : arrêter ou supprimer une sandbox ferme ses sessions, ce qui peut notifier leur fin (non vérifié).
+
 ## Native access
 
 - Process `sbx` lancés via `child_process` et `node-pty`, uniquement depuis les adapters.
