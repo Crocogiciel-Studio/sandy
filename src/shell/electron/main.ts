@@ -8,6 +8,7 @@ import { registerTerminalIpc } from './ipc/terminal';
 import { quitPrompt } from './quit-guard';
 import { createTray } from './tray';
 
+
 // Set once quitting is decided: until then closing the window only hides it.
 let quitting = false;
 
@@ -29,7 +30,13 @@ function createWindow(): void {
   window.on('close', (event) => {
     if (quitting) return;
     event.preventDefault();
-    window.hide();
+    // Hiding a fullscreen window leaves an empty Space behind on macOS: leave fullscreen first.
+    if (window.isFullScreen()) {
+      window.once('leave-full-screen', () => window.hide());
+      window.setFullScreen(false);
+    } else {
+      window.hide();
+    }
   });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
@@ -50,7 +57,15 @@ function showWindow(): void {
 
 app.setName('Sandy');
 
-void app.whenReady().then(() => {
+// A second instance would start its own pty-host, blind to the sessions of the one hidden in the tray.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', showWindow);
+  void app.whenReady().then(start);
+}
+
+function start(): void {
   // Packaged builds get their icon from electron-builder; in dev the dock would show Electron's.
   if (!app.isPackaged) app.dock?.setIcon(join(app.getAppPath(), 'build/icon.png'));
   const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'));
@@ -75,8 +90,4 @@ void app.whenReady().then(() => {
   });
 
   app.on('activate', showWindow);
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+}

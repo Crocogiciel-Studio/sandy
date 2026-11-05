@@ -28,7 +28,7 @@ src/shell/electron/
 > Without a Dock, a hidden window needs a way back.
 
 1. Create `tray.ts`: `Tray` from `build/icon.png`, click and menu "Show Sandy" show the window, menu "Quit" calls `app.quit()`.
-2. In `main.ts`, on non-darwin create the tray once; `window-all-closed` no longer quits (the window is hidden, not closed) except through quit.
+2. In `main.ts`, on non-darwin create the tray once and keep a reference; `window-all-closed` is removed (the window is hidden, never closed, until quit).
 3. Make sure `build/icon.png` is available in packaged builds (check `electron-builder` config `files`/`extraResources`).
 
 ## Test acceptance criteria

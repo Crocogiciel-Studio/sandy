@@ -45,9 +45,9 @@ aidd_docs/memory/desktop.md ✏️
 > The window disappears but is never destroyed unless the app quits.
 
 1. In `main.ts`, keep a `quitting` flag set in `before-quit`.
-2. On the window's `close`, when not `quitting`, call `event.preventDefault()` and `window.hide()` (macOS: also leave the Dock icon).
+2. On the window's `close`, when not `quitting`, call `event.preventDefault()` and `window.hide()`; a fullscreen window leaves fullscreen first (macOS would leave an empty Space).
 3. Remove the `closed → terminal.closeAll()` line.
-4. `activate`: show the existing window (`show()`), create one only if none exists.
+4. `requestSingleInstanceLock()`: a second launch shows the first window. `activate`: show the existing window (`show()`), create one only if none exists.
 
 ### `4)` Confirm on quit
 
