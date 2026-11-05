@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { PROTOCOL_VERSION } from '../../../contracts/pty-messages';
 import type { HostPaths } from '../../../pty-host/paths';
 import { openConnection, type HostConnection } from './host-client';
 
@@ -12,7 +13,11 @@ export async function connectToHost(paths: HostPaths, hostPath: string): Promise
   let started = false;
   for (;;) {
     const connection = await openConnection(paths);
-    if (connection) return connection;
+    if (connection) {
+      if (connection.hostProtocol === PROTOCOL_VERSION) return connection;
+      connection.close();
+      throw new Error('A terminal host from another version of Sandy is still running.');
+    }
     if (!started) {
       started = true;
       const child = spawn(process.execPath, [hostPath], {

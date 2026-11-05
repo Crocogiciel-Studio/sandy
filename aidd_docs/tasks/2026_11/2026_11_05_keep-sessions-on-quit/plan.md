@@ -60,5 +60,5 @@ Source: GitHub issue #78
 | Screen state is rebuilt from a headless xterm kept per session in the host | The renderer that held the screens dies with the app (unlike #84); replaying raw output would need an unbounded buffer and loses the alternate screen |
 | Quit offers "Keep running" (default) and "Stop sessions", plus Cancel | #56 product decision: sessions persist by default, stopping is explicit |
 | The host exits when it holds no session and no client is connected for 30 s, and on an explicit `shutdown` | No orphan process after an explicit stop or after the last agent ends |
-| A host with a different protocol version is not reattached: sandy tells the user and offers to stop those sessions through a `shutdown` message whose shape never changes | An update must not strand invisible agents, and must not silently kill them either |
+| A host with a different protocol version is not reattached: sandy tells the user and offers to stop those sessions (or quit) through a `shutdown` message whose shape never changes | An update must not strand invisible agents, and must not silently kill them either |
 | Sessions that ended while sandy was closed are dropped from the host at the next `list` | Keeps the host simple; the sandbox itself remains reachable from the project page |

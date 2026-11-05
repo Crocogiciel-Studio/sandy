@@ -18,11 +18,13 @@ interface Options {
   paths: HostPaths;
   onClosed: () => void;
   idleExitMs?: number;
+  // Only tests pass another version, to play an older host.
+  protocol?: number;
 }
 
 // Serves the sessions over a socket. Sessions never depend on a client being connected.
 // Resolves `undefined` when another host already answers on the socket.
-export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_MS }: Options): Promise<HostServer | undefined> {
+export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_MS, protocol = PROTOCOL_VERSION }: Options): Promise<HostServer | undefined> {
   mkdirSync(paths.dir, { recursive: true, mode: 0o700 });
   if (process.platform !== 'win32') chmodSync(paths.dir, 0o700);
   if (await isAlive(paths.socket)) return undefined;
@@ -85,7 +87,7 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
           clearTimeout(helloTimer);
           clients.add(client);
           checkIdle();
-          socket.write(encodeMessage({ type: 'hello-ok', protocol: PROTOCOL_VERSION } satisfies HostMessage));
+          socket.write(encodeMessage({ type: 'hello-ok', protocol } satisfies HostMessage));
         } else {
           socket.end(encodeMessage({ type: 'hello-refused' } satisfies HostMessage));
         }

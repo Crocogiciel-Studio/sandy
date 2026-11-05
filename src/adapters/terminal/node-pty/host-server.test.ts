@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { openConnection } from './host-client';
+import { NodePtyTerminal } from './node-pty-terminal';
 import { createLineDecoder, encodeMessage } from '../../../contracts/framing';
 import type { HostMessage } from '../../../contracts/pty-messages';
 import { hostPaths } from '../../../pty-host/paths';
@@ -16,13 +17,13 @@ afterEach(() => {
   dirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true }));
 });
 
-async function start(idleExitMs = 30_000) {
+async function start(idleExitMs = 30_000, protocol?: number) {
   // Short directory: Unix socket paths are limited to ~100 characters.
   const dir = mkdtempSync(join(tmpdir(), 'sh-'));
   dirs.push(dir);
   const paths = hostPaths(dir);
   const closed = { value: false };
-  const server = await startHostServer({ paths, idleExitMs, onClosed: () => (closed.value = true) });
+  const server = await startHostServer({ paths, idleExitMs, protocol, onClosed: () => (closed.value = true) });
   if (!server) throw new Error('server did not start');
   servers.push(server);
   return { paths, server, closed };
@@ -195,5 +196,67 @@ describe('pty-host server', () => {
     connection.send({ type: 'attach', id: 'nope' });
 
     expect(await waitFor(() => messages.find((m) => m.type === 'attach-failed'))).toEqual({ type: 'attach-failed', id: 'nope' });
+  });
+
+  describe('as seen by the app', () => {
+    it('finds no host when none runs', async () => {
+      const dir = mkdtempSync(join(tmpdir(), 'sh-'));
+      dirs.push(dir);
+
+      expect(await new NodePtyTerminal('unused', hostPaths(dir)).inspectHost()).toBe('none');
+    });
+
+    it('reconnects to a host of the same version and lists its sessions', async () => {
+      const { paths } = await start();
+      const first = await client(paths);
+      first.connection.send(open('a', { meta: { agent: 'claude' } }));
+      await waitFor(() => first.messages.find((m) => m.type === 'opened'));
+      first.connection.close();
+
+      const terminal = new NodePtyTerminal('unused', paths);
+
+      expect(await terminal.inspectHost()).toBe('compatible');
+      expect(await terminal.list()).toMatchObject([{ id: 'a', meta: { agent: 'claude' } }]);
+      expect(terminal.runningCount()).toBe(1);
+      terminal.disconnect();
+    });
+
+    it('reports a host of another version, never drives it, and stops it on request', async () => {
+      const { paths, closed } = await start(30_000, 999);
+      const terminal = new NodePtyTerminal('unused', paths);
+
+      expect(await terminal.inspectHost()).toBe('foreign');
+      expect(await terminal.list()).toEqual([]);
+      await terminal.stopForeignHost();
+
+      expect(closed.value).toBe(true);
+    });
+
+    it('keeps the host and its sessions when the app only disconnects', async () => {
+      const { paths, closed } = await start();
+      const terminal = new NodePtyTerminal('unused', paths);
+      await terminal.inspectHost();
+      await expect(terminal.attach('missing')).rejects.toThrow('ended');
+      const direct = await client(paths);
+      direct.connection.send(open('a'));
+      await waitFor(() => direct.messages.find((m) => m.type === 'opened'));
+
+      terminal.disconnect();
+      await new Promise((wake) => setTimeout(wake, 100));
+
+      expect(closed.value).toBe(false);
+      direct.connection.send({ type: 'list' });
+      expect(await waitFor(() => direct.messages.find((m) => m.type === 'sessions'))).toMatchObject({ sessions: [{ id: 'a' }] });
+    });
+
+    it('stops the host with every session on dispose', async () => {
+      const { paths, closed } = await start();
+      const terminal = new NodePtyTerminal('unused', paths);
+      await terminal.inspectHost();
+
+      terminal.dispose();
+
+      await waitFor(() => (closed.value ? true : undefined));
+    });
   });
 });

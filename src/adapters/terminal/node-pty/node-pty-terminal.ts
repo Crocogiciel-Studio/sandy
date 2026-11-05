@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { HostMessage, PtyRequest, SessionInfo } from '../../../contracts/pty-messages';
+import { PROTOCOL_VERSION, type HostMessage, type PtyRequest, type SessionInfo } from '../../../contracts/pty-messages';
 import {
   CommandNotFoundError,
   type LiveTerminal,
@@ -18,6 +18,8 @@ type Attaching = { resolve: (screen: TerminalScreen) => void; reject: (error: Er
 // and sessions can outlive the app.
 export class NodePtyTerminal implements TerminalProvider {
   private connection?: HostConnection;
+  // A host from another version of the app: never driven, only offered to be stopped.
+  private foreign?: HostConnection;
   private connecting?: Promise<HostConnection | undefined>;
   private readonly pending = new Map<string, Pending>();
   private readonly attaching = new Map<string, Attaching>();
@@ -87,6 +89,39 @@ export class NodePtyTerminal implements TerminalProvider {
     for (const id of this.running) this.close(id);
   }
 
+  // Whether a host from an earlier launch speaks this version. Call once at startup, before any session.
+  async inspectHost(): Promise<'none' | 'compatible' | 'foreign'> {
+    const connection = await openConnection(this.paths);
+    if (!connection) return 'none';
+    if (connection.hostProtocol === PROTOCOL_VERSION) {
+      this.connecting = Promise.resolve(connection);
+      this.adopt(connection);
+      return 'compatible';
+    }
+    this.foreign = connection;
+    return 'foreign';
+  }
+
+  // Ends the sessions of a host from another version. Resolves once it is gone, so a new one can take its place.
+  async stopForeignHost(): Promise<void> {
+    const foreign = this.foreign;
+    this.foreign = undefined;
+    if (!foreign) return;
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, 3000);
+      foreign.onClose(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+      foreign.send({ type: 'shutdown' });
+    });
+  }
+
+  // Quitting while leaving every session running: the host keeps them.
+  disconnect(): void {
+    this.connection?.close();
+  }
+
   // Stops every session and the host itself.
   dispose(): void {
     this.connection?.send({ type: 'shutdown' });
@@ -111,6 +146,11 @@ export class NodePtyTerminal implements TerminalProvider {
   // The running host, if any.
   private reuse(): Promise<HostConnection | undefined> {
     this.connecting ??= openConnection(this.paths).then((connection) => {
+      if (connection && connection.hostProtocol !== PROTOCOL_VERSION) {
+        connection.close();
+        this.connecting = undefined;
+        return undefined;
+      }
       if (!connection) this.connecting = undefined;
       else this.adopt(connection);
       return connection;

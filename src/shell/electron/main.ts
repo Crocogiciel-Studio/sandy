@@ -6,7 +6,7 @@ import { registerSbxIpc } from './ipc/sbx';
 import { registerSessionIpc } from './ipc/session';
 import { registerTerminalIpc } from './ipc/terminal';
 import { hostPaths } from '../../pty-host/paths';
-import { quitPrompt } from './quit-guard';
+import { quitChoice, quitPrompt, type QuitChoice } from './quit-guard';
 import { createTray } from './tray';
 
 
@@ -66,10 +66,14 @@ if (!app.requestSingleInstanceLock()) {
   void app.whenReady().then(start);
 }
 
-function start(): void {
+async function start(): Promise<void> {
   // Packaged builds get their icon from electron-builder; in dev the dock would show Electron's.
   if (!app.isPackaged) app.dock?.setIcon(join(app.getAppPath(), 'build/icon.png'));
   const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'), hostPaths(app.getPath('userData')));
+  // A host from an earlier launch keeps its sessions: reconnect to it first, so the quit dialog counts them.
+  const host = await terminal.inspectHost();
+  if (host === 'foreign' && !(await replaceForeignHost(terminal))) return app.quit();
+  if (host === 'compatible') await terminal.list();
   registerTerminalIpc(terminal);
   const sandbox = new SbxSandboxProvider();
   registerSbxIpc({ sandbox, terminal });
@@ -78,17 +82,35 @@ function start(): void {
   if (process.platform !== 'darwin') createTray(showWindow);
 
   app.on('before-quit', (event) => {
-    if (quitting) return terminal.dispose();
+    if (quitting) return;
     const prompt = quitPrompt(terminal.runningCount());
+    let choice: QuitChoice = 'stop';
     if (prompt) {
       event.preventDefault();
-      const choice = dialog.showMessageBoxSync({ type: 'warning', buttons: ['Cancel', 'Quit'], defaultId: 0, cancelId: 0, ...prompt });
-      if (choice !== 1) return;
+      choice = quitChoice(dialog.showMessageBoxSync({ type: 'warning', ...prompt }));
+      if (choice === 'cancel') return;
     }
     quitting = true;
-    if (prompt) return app.quit();
-    terminal.dispose();
+    // Stopping also ends the host, which would otherwise outlive the app with nothing to serve.
+    if (choice === 'keep') terminal.disconnect();
+    else terminal.dispose();
+    if (prompt) app.quit();
   });
 
   app.on('activate', showWindow);
+}
+
+// An update can leave the previous version's host running, with sessions this version cannot drive.
+async function replaceForeignHost(terminal: NodePtyTerminal): Promise<boolean> {
+  const { response } = await dialog.showMessageBox({
+    type: 'warning',
+    message: 'Sessions from a previous version of Sandy are still running',
+    detail: 'This version cannot reconnect to them. Stop them to continue, or quit and finish their work with the previous version.',
+    buttons: ['Stop them and continue', 'Quit'],
+    defaultId: 1,
+    cancelId: 1,
+  });
+  if (response !== 0) return false;
+  await terminal.stopForeignHost();
+  return true;
 }

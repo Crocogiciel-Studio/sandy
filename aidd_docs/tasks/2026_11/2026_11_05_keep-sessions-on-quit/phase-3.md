@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: quit choice, lifecycle, version mismatch
@@ -22,7 +22,7 @@ src/adapters/terminal/node-pty/node-pty-terminal.ts    ✏️
 | Happy path | Quit, choose Keep running, relaunch | App exits, host and agents alive, same sessions listed | browser |
 | Edge case | Quit, choose Stop sessions | Agents stopped, host process gone | browser |
 | Edge case | Quit with no session | No dialog, host gone | browser |
-| Edge case | Host with another protocol version | Dialog offers to stop those sessions; sandy does not reattach | system |
+| Edge case | Host with another protocol version | Dialog offers to stop those sessions or quit; sandy never drives that host | system |
 | Edge case | Cancel | Nothing changes | browser |
 
 ## Tasks to do
@@ -45,7 +45,7 @@ src/adapters/terminal/node-pty/node-pty-terminal.ts    ✏️
 
 > Never strand invisible agents, never kill them silently.
 
-1. On `hello-refused` for protocol, show a dialog; "Stop them" sends `shutdown` over a handshake that has the same shape in every version; "Not now" starts without the host features and leaves it alone.
+1. On `hello-refused` for protocol, show a dialog; "Stop them" sends `shutdown` over a handshake that has the same shape in every version; "Quit" leaves it alone (sandy cannot run sessions without a host, so there is no third path).
 
 ## Test acceptance criteria
 
