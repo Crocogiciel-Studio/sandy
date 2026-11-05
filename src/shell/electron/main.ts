@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { app, BrowserWindow, dialog } from 'electron';
 import { SbxSandboxProvider } from '../../adapters/sandbox/sbx/sbx-sandbox-provider';
 import { NodePtyTerminal } from '../../adapters/terminal/node-pty/node-pty-terminal';
+import { registerNotificationIpc } from './ipc/notification';
 import { registerSbxIpc } from './ipc/sbx';
 import { registerSessionIpc } from './ipc/session';
 import { registerTerminalIpc } from './ipc/terminal';
@@ -78,6 +79,7 @@ async function start(): Promise<void> {
   const sandbox = new SbxSandboxProvider();
   registerSbxIpc({ sandbox, terminal });
   registerSessionIpc({ sandbox, terminal });
+  registerNotificationIpc(showWindow);
   createWindow();
   if (process.platform !== 'darwin') createTray(showWindow);
 

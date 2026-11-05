@@ -4,6 +4,7 @@ export interface SandyApi {
   session: SessionApi;
   sbx: SbxApi;
   files: FilesApi;
+  notification: NotificationApi;
 }
 
 export interface TerminalApi {
@@ -36,6 +37,12 @@ export interface SessionApi {
   listLive(): Promise<LiveSession[]>;
   // Same for a clipboard image (png, jpeg, gif or webp): resolves with the sandbox path to type.
   pasteImage(id: string, image: ArrayBuffer, mimeType: string): Promise<PrepareDropResult>;
+}
+
+export interface NotificationApi {
+  // System notification for a session; clicking it shows the window and fires onOpenSession.
+  notify(id: string, title: string, body: string): void;
+  onOpenSession(listener: (id: string) => void): () => void;
 }
 
 export interface FilesApi {

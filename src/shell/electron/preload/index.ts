@@ -37,6 +37,10 @@ const api: SandyApi = {
     openInstallGuide: () => ipcRenderer.invoke('sbx:open-install-guide'),
     platform: process.platform,
   },
+  notification: {
+    notify: (id, title, body) => ipcRenderer.send('notification:notify', id, title, body),
+    onOpenSession: (listener) => subscribe('notification:open-session', listener),
+  },
   files: {
     pathsFor: (files) => files.map((file) => webUtils.getPathForFile(file)).filter((path) => path !== ''),
   },
