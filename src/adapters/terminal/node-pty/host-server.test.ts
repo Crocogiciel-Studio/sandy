@@ -48,6 +48,8 @@ async function client(paths: ReturnType<typeof hostPaths>) {
 }
 
 const SCRIPT = 'console.log("hello"); setInterval(() => undefined, 1000)';
+// Full environment: on Windows a child without SystemRoot and friends does not start.
+const clientEnv = () => Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined));
 const open = (id: string, extra = {}) => ({ type: 'open' as const, id, command: 'node', args: ['-e', SCRIPT], cwd: tmpdir(), cols: 80, rows: 24, ...extra });
 
 describe('pty-host server', () => {
@@ -93,7 +95,7 @@ describe('pty-host server', () => {
     const { paths } = await start();
     const { connection, messages } = await client(paths);
 
-    connection.send(open('a', { args: ['-e', 'console.log("env:" + process.env.SANDY_TEST_VALUE); process.exit(0)'], env: { PATH: process.env['PATH'] ?? '', SANDY_TEST_VALUE: 'from-client' } }));
+    connection.send(open('a', { args: ['-e', 'console.log("env:" + process.env.SANDY_TEST_VALUE); process.exit(0)'], env: { ...clientEnv(), SANDY_TEST_VALUE: 'from-client' } }));
 
     await waitFor(() => messages.find((m) => m.type === 'data' && m.data.includes('env:from-client')));
   });
