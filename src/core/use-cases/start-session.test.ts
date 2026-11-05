@@ -26,6 +26,8 @@ function fakeTerminal(open: (options: TerminalOptions) => Promise<string>): Term
     close: () => {},
     onData: () => () => {},
     onExit: () => () => {},
+    list: async () => [],
+    attach: async () => ({ cols: 80, rows: 24, data: '' }),
   };
 }
 
@@ -50,6 +52,7 @@ describe('startSession', () => {
         cwd: '/home/me/Mon Projet',
         cols: 100,
         rows: 30,
+        meta: { sandboxName: expect.stringMatching(/^claude-mon-projet-[0-9a-f]{6}$/), projectPath: '/home/me/Mon Projet', agent: 'claude' },
       },
     ]);
   });

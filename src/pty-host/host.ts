@@ -1,13 +1,17 @@
 import { accessSync, constants, statSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
 import { spawn, type IPty } from 'node-pty';
-import type { PtyEvent, PtyRequest } from '../contracts/pty-messages';
+import type { PtyEvent, PtyRequest, SessionInfo } from '../contracts/pty-messages';
+import { createScreen, type Screen, type ScreenSnapshot } from './screen';
 import { searchDirs } from './search-dirs';
 
 const FLUSH_DELAY_MS = 8;
 
 interface Session {
   pty: IPty;
+  screen: Screen;
+  meta: Record<string, string>;
+  startedAt: number;
   buffer: string;
   timer?: NodeJS.Timeout;
 }
@@ -15,6 +19,8 @@ interface Session {
 export interface PtyHost {
   (request: PtyRequest): void;
   count(): number;
+  list(): SessionInfo[];
+  snapshot(id: string): Promise<ScreenSnapshot | undefined>;
   killAll(): void;
 }
 
@@ -24,7 +30,10 @@ export function createPtyHost(send: (event: PtyEvent) => void): PtyHost {
   function flush(id: string, session: Session): void {
     clearTimeout(session.timer);
     session.timer = undefined;
-    if (session.buffer) send({ type: 'data', id, data: session.buffer });
+    if (session.buffer) {
+      session.screen.write(session.buffer);
+      send({ type: 'data', id, data: session.buffer });
+    }
     session.buffer = '';
   }
 
@@ -44,7 +53,7 @@ export function createPtyHost(send: (event: PtyEvent) => void): PtyHost {
       send({ type: 'open-failed', id, reason: 'spawn-error', message: String(error) });
       return;
     }
-    const session: Session = { pty, buffer: '' };
+    const session: Session = { pty, buffer: '', screen: createScreen(cols, rows), meta: request.meta ?? {}, startedAt: Date.now() };
     sessions.set(id, session);
     send({ type: 'opened', id });
     pty.onData((data) => {
@@ -54,6 +63,7 @@ export function createPtyHost(send: (event: PtyEvent) => void): PtyHost {
     pty.onExit(({ exitCode }) => {
       flush(id, session);
       sessions.delete(id);
+      session.screen.dispose();
       send({ type: 'exit', id, exitCode });
     });
   }
@@ -63,11 +73,16 @@ export function createPtyHost(send: (event: PtyEvent) => void): PtyHost {
     const session = sessions.get(request.id);
     if (!session) return;
     if (request.type === 'write') session.pty.write(request.data);
-    else if (request.type === 'resize') session.pty.resize(request.cols, request.rows);
+    else if (request.type === 'resize') {
+      session.pty.resize(request.cols, request.rows);
+      session.screen.resize(request.cols, request.rows);
+    }
     else session.pty.kill();
   };
   return Object.assign(handle, {
     count: () => sessions.size,
+    list: () => [...sessions].map(([id, { meta, startedAt }]) => ({ id, meta, startedAt })),
+    snapshot: async (id: string) => sessions.get(id)?.screen.snapshot(),
     killAll: () => sessions.forEach((session) => session.pty.kill()),
   });
 }

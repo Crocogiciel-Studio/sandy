@@ -30,6 +30,8 @@ export interface SessionApi {
   blockedHosts(id: string): Promise<BlockedHostsResult>;
   // Allows one of those hosts for the session's sandbox only; refused if it is not blocked right now.
   allowHost(id: string, host: string): Promise<ActionResult>;
+  // Sessions still running in the terminal host, e.g. after sandy was quit and relaunched.
+  listLive(): Promise<LiveSession[]>;
   // Same for a clipboard image (png, jpeg, gif or webp): resolves with the sandbox path to type.
   pasteImage(id: string, image: ArrayBuffer, mimeType: string): Promise<PrepareDropResult>;
 }
@@ -44,6 +46,12 @@ export interface StartSessionRequest {
   projectPath: string;
   cols: number;
   rows: number;
+}
+
+export interface LiveSession {
+  id: string;
+  agent: string;
+  projectPath: string;
 }
 
 export type StartSessionResult = { ok: true; id: string } | { ok: false; message: string };

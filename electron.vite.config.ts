@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   main: {
     build: {
+      // Pure JS, and the headless package is CommonJS: bundled into pty-host, which runs as plain Node.
+      externalizeDeps: { exclude: ['@xterm/headless', '@xterm/addon-serialize', '@xterm/addon-unicode11'] },
       rolldownOptions: {
         input: {
           main: resolve('src/shell/electron/main.ts'),

@@ -141,4 +141,59 @@ describe('pty-host server', () => {
 
     expect(await startHostServer({ paths, onClosed: () => undefined })).toBeUndefined();
   });
+
+  it('lists live sessions with their metadata', async () => {
+    const { paths } = await start();
+    const first = await client(paths);
+    first.connection.send(open('a', { meta: { sandboxName: 'claude-app', agent: 'claude' } }));
+    await waitFor(() => first.messages.find((m) => m.type === 'opened'));
+    first.connection.close();
+
+    const second = await client(paths);
+    second.connection.send({ type: 'list' });
+
+    const reply = await waitFor(() => second.messages.find((m) => m.type === 'sessions'));
+    expect(reply).toMatchObject({ sessions: [{ id: 'a', meta: { sandboxName: 'claude-app', agent: 'claude' } }] });
+  });
+
+  it('drops a session from the list once it has exited', async () => {
+    const { paths } = await start();
+    const { connection, messages } = await client(paths);
+    connection.send(open('a', { args: ['-e', 'process.exit(0)'] }));
+    await waitFor(() => messages.find((m) => m.type === 'exit'));
+
+    connection.send({ type: 'list' });
+
+    expect(await waitFor(() => messages.find((m) => m.type === 'sessions'))).toEqual({ type: 'sessions', sessions: [] });
+  });
+
+  it('sends the screen on attach, then the live data, in that order', async () => {
+    const { paths } = await start();
+    const first = await client(paths);
+    first.connection.send(open('a', { args: ['-e', 'console.log("before"); process.stdin.on("data", (d) => console.log("echo:" + d.toString().trim()))'] }));
+    await waitFor(() => first.messages.find((m) => m.type === 'data' && m.data.includes('before')));
+    first.connection.close();
+
+    const second = await client(paths);
+    second.connection.send({ type: 'attach', id: 'a' });
+    second.connection.send({ type: 'write', id: 'a', data: 'ping\r' });
+
+    await waitFor(() => second.messages.find((m) => m.type === 'data' && m.data.includes('echo:ping')));
+    const kinds = second.messages.map((m) => m.type);
+    expect(kinds.indexOf('snapshot')).toBeGreaterThanOrEqual(0);
+    expect(kinds.indexOf('snapshot')).toBeLessThan(kinds.indexOf('data'));
+    const snapshot = second.messages.find((m) => m.type === 'snapshot');
+    expect(snapshot).toMatchObject({ id: 'a', cols: 80, rows: 24 });
+    expect(snapshot?.type === 'snapshot' && snapshot.data).toContain('before');
+    expect(snapshot?.type === 'snapshot' && snapshot.data).not.toContain('echo:ping');
+  });
+
+  it('refuses to attach an unknown session', async () => {
+    const { paths } = await start();
+    const { connection, messages } = await client(paths);
+
+    connection.send({ type: 'attach', id: 'nope' });
+
+    expect(await waitFor(() => messages.find((m) => m.type === 'attach-failed'))).toEqual({ type: 'attach-failed', id: 'nope' });
+  });
 });

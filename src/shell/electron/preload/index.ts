@@ -25,6 +25,7 @@ const api: SandyApi = {
     attach: (request) => ipcRenderer.invoke('session:attach', request),
     blockedHosts: (id) => ipcRenderer.invoke('session:blocked-hosts', id),
     allowHost: (id, host) => ipcRenderer.invoke('session:allow-host', id, host),
+    listLive: () => ipcRenderer.invoke('session:list-live'),
     prepareDrop: (id, hostPaths) => ipcRenderer.invoke('session:prepare-drop', id, hostPaths),
     pasteImage: (id, image, mimeType) => ipcRenderer.invoke('session:paste-image', id, image, mimeType),
   },

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: session registry and screen replay
@@ -8,6 +8,7 @@ status: pending
 
 ```txt
 package.json                                           ✏️
+electron.vite.config.ts                                ✏️
 src/contracts/pty-messages.ts                          ✏️
 src/core/ports/terminal-provider.ts                    ✏️
 src/pty-host/
@@ -37,7 +38,7 @@ src/shell/electron/ipc/session.ts                      ✏️
 
 > Know what each session shows, without the renderer.
 
-1. Add `@xterm/headless` 6.0.0 and `@xterm/addon-serialize` 0.14.0 (exact versions, `package.json` and lockfile); externalize them like `node-pty` if the bundler needs it.
+1. Add `@xterm/headless` 6.0.0 and `@xterm/addon-serialize` 0.14.0 (exact versions, `package.json` and lockfile); bundle them into `pty-host` (`externalizeDeps.exclude`): the headless package is CommonJS and the host runs as plain Node.
 2. `screen.ts`: per-session headless terminal with `unicode11`, fed with PTY data, resized with the PTY, `snapshot()` through the serialize addon.
 
 ### `2)` Registry protocol
@@ -45,13 +46,13 @@ src/shell/electron/ipc/session.ts                      ✏️
 > List the live sessions and attach to one.
 
 1. Extend `open` with `meta: Record<string, string>` (opaque to the host); add `list` → `sessions` (id, meta, cols, rows, startedAt) and `attach` → `snapshot` (id, data) with the data queued after it, in order.
-2. Host drops exited sessions at the next `list`.
+2. An exited session leaves the registry at once; a session that ended while sandy was closed is simply absent from `list`.
 
 ### `3)` Port and adapter
 
 > The core can enumerate and re-attach terminals.
 
-1. `TerminalProvider`: `list(): Promise<LiveTerminal[]>` and `attach(id, cols, rows): Promise<string>` (resolves with the snapshot); `open` takes `meta`.
+1. `TerminalProvider`: `list(): Promise<LiveTerminal[]>` and `attach(id): Promise<{ cols, rows, data }>` (the screen at the PTY's size; the UI sizes its xterm to it before writing); `open` takes `meta`.
 2. `NodePtyTerminal`: implement both over the client.
 3. `startSession`/`attachSession`: pass the sandbox name, project path, agent as `meta`.
 

@@ -18,5 +18,5 @@ export async function startSession(
 ): Promise<string> {
   const name = sessionName(agent, projectPath, suffix);
   const { command, args } = deps.sandbox.sessionCommand({ agent, projectPath, name });
-  return deps.terminal.open({ command, args, cwd: projectPath, cols, rows });
+  return deps.terminal.open({ command, args, cwd: projectPath, cols, rows, meta: { sandboxName: name, projectPath, agent } });
 }

@@ -2,7 +2,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { chmodSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { connect, createServer, type Socket } from 'node:net';
 import { createLineDecoder, encodeMessage } from '../contracts/framing';
-import { PROTOCOL_VERSION, type ClientMessage, type HostMessage, type PtyRequest } from '../contracts/pty-messages';
+import { PROTOCOL_VERSION, type ClientMessage, type HostMessage } from '../contracts/pty-messages';
 import { createPtyHost } from './host';
 import type { HostPaths } from './paths';
 
@@ -32,10 +32,29 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
   const token = randomBytes(32).toString('hex');
   writeFileSync(paths.token, token, { mode: 0o600 });
 
-  const clients = new Set<Socket>();
+  // `attaching`: sessions whose snapshot is not sent yet. Their live events wait, so a snapshot is never overtaken.
+  interface Client {
+    socket: Socket;
+    attaching: Map<string, string[]>;
+  }
+  const clients = new Set<Client>();
   const broadcast = (message: HostMessage): void => {
     const line = encodeMessage(message);
-    clients.forEach((client) => client.write(line));
+    for (const client of clients) {
+      const queue = 'id' in message ? client.attaching.get(message.id) : undefined;
+      if (queue) queue.push(line);
+      else client.socket.write(line);
+    }
+  };
+  const attach = (client: Client, id: string): void => {
+    client.attaching.set(id, []);
+    void host.snapshot(id).then((snapshot) => {
+      const queued = client.attaching.get(id) ?? [];
+      client.attaching.delete(id);
+      const reply: HostMessage = snapshot ? { type: 'snapshot', id, ...snapshot } : { type: 'attach-failed', id };
+      client.socket.write(encodeMessage(reply));
+      queued.forEach((line) => client.socket.write(line));
+    });
   };
   const host = createPtyHost((event) => {
     broadcast(event);
@@ -55,6 +74,7 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
 
   const server = createServer((socket) => {
     socket.setEncoding('utf8');
+    const client: Client = { socket, attaching: new Map() };
     let authenticated = false;
     const helloTimer = setTimeout(() => socket.destroy(), HELLO_TIMEOUT_MS);
     const decode = createLineDecoder((raw) => {
@@ -63,7 +83,7 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
         if (message?.type === 'hello' && tokenMatches(message.token, token)) {
           authenticated = true;
           clearTimeout(helloTimer);
-          clients.add(socket);
+          clients.add(client);
           checkIdle();
           socket.write(encodeMessage({ type: 'hello-ok', protocol: PROTOCOL_VERSION } satisfies HostMessage));
         } else {
@@ -72,13 +92,16 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
         return;
       }
       if (message.type === 'shutdown') shutdown();
-      else if (message.type !== 'hello') host(message as PtyRequest);
+      else if (message.type === 'list') socket.write(encodeMessage({ type: 'sessions', sessions: host.list() } satisfies HostMessage));
+      else if (message.type === 'attach') {
+        if (typeof message.id === 'string') attach(client, message.id);
+      } else if (message.type !== 'hello') host(message);
     });
     socket.on('data', decode);
     socket.on('error', () => undefined);
     socket.on('close', () => {
       clearTimeout(helloTimer);
-      clients.delete(socket);
+      clients.delete(client);
       checkIdle();
     });
   });
@@ -96,7 +119,7 @@ export async function startHostServer({ paths, onClosed, idleExitMs = IDLE_EXIT_
     closed = true;
     clearTimeout(idleTimer);
     host.killAll();
-    clients.forEach((client) => client.destroy());
+    clients.forEach((client) => client.socket.destroy());
     server.close();
     rmSync(paths.token, { force: true });
     if (process.platform !== 'win32') rmSync(paths.socket, { force: true });
