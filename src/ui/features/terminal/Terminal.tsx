@@ -35,7 +35,7 @@ export async function openTerminal(
   // The font is loaded lazily: xterm measures its cells once, so a fallback font at that moment
   // skews every column until the next resize.
   await document.fonts.load(`13px ${terminalFont()}`).catch(() => undefined);
-  const xterm = new XTerm({ cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
+  const xterm = new XTerm({ allowProposedApi: true, cursorBlink: true, fontFamily: terminalFont(), fontSize: 13, theme: currentTerminalTheme() });
   // Agents lay out their status bars with recent Unicode widths (emoji take two cells).
   xterm.loadAddon(new Unicode11Addon());
   xterm.unicode.activeVersion = '11';
