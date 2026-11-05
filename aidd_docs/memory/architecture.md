@@ -30,7 +30,6 @@ flowchart LR
 - **Electron plutôt que Tauri ou Wails** : CDP natif pour l'inspecteur v2, Linux fiable, tout en TS. La RAM (plancher Chromium) est acceptée parce que marginale face aux microVMs `sbx`. Objectif : une RAM maîtrisée (un seul renderer, aperçu chargé à la demande).
 - **Réutiliser avant de construire** : avant chaque fonctionnalité, chercher une brique open source maintenue à intégrer.
 - **Sécurité Electron** : `contextIsolation`, `sandbox`, pas de `nodeIntegration`. Le renderer ne voit que l'API exposée par le preload.
-
 - **Les sessions survivent à l'app.** Le `pty-host` est le binaire Electron lancé en Node (`ELECTRON_RUN_AS_NODE`, `detached`), joint par socket Unix (tube nommé sous Windows) avec un jeton et une version de protocole. Il garde l'écran de chaque session (`@xterm/headless` + `addon-serialize`) pour le rejouer à la reconnexion, et s'arrête seul sans session ni client (30 s) ou sur `shutdown`.
 
 ## Gotchas
