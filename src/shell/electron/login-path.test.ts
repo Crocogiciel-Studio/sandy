@@ -1,3 +1,4 @@
+import { delimiter } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { mergePaths, parseLoginPath } from './login-path';
 
@@ -14,6 +15,7 @@ describe('parseLoginPath', () => {
 
 describe('mergePaths', () => {
   it('puts the login path first and drops duplicates', () => {
-    expect(mergePaths('/a:/b', '/b:/c')).toBe('/a:/b:/c');
+    const join = (...parts: string[]) => parts.join(delimiter);
+    expect(mergePaths(join('/a', '/b'), join('/b', '/c'))).toBe(join('/a', '/b', '/c'));
   });
 });
