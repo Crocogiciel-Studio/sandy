@@ -8,6 +8,7 @@ import { registerSessionIpc } from './ipc/session';
 import { registerTerminalIpc } from './ipc/terminal';
 import { hostPaths } from '../../pty-host/paths';
 import { quitChoice, quitPrompt, type QuitChoice } from './quit-guard';
+import { adoptLoginPath } from './login-path';
 import { createTray } from './tray';
 
 
@@ -70,6 +71,8 @@ if (!app.requestSingleInstanceLock()) {
 async function start(): Promise<void> {
   // Packaged builds get their icon from electron-builder; in dev the dock would show Electron's.
   if (!app.isPackaged) app.dock?.setIcon(join(app.getAppPath(), 'build/icon.png'));
+  // Before anything spawns sbx or the pty-host: both inherit this PATH.
+  await adoptLoginPath();
   const terminal = new NodePtyTerminal(join(import.meta.dirname, 'pty-host.js'), hostPaths(app.getPath('userData')));
   // A host from an earlier launch keeps its sessions: reconnect to it first, so the quit dialog counts them.
   const host = await terminal.inspectHost();
