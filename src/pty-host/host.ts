@@ -1,5 +1,5 @@
 import { accessSync, constants, statSync } from 'node:fs';
-import { isAbsolute, join, resolve } from 'node:path';
+import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { spawn, type IPty } from 'node-pty';
 import type { PtyEvent, PtyRequest, SessionInfo } from '../contracts/pty-messages';
 import { createScreen, type Screen, type ScreenSnapshot } from './screen';
@@ -46,9 +46,11 @@ export function createPtyHost(send: (event: PtyEvent) => void): PtyHost {
       send({ type: 'open-failed', id, reason: 'command-not-found', message: `Command not found: ${command}` });
       return;
     }
+    // The child (sbx) runs helpers such as docker-credential-desktop from PATH: give it the same dirs we searched.
+    const pathKey = Object.keys(env).find((key) => key.toUpperCase() === 'PATH') ?? 'PATH';
     let pty: IPty;
     try {
-      pty = spawn(file, args, { name: 'xterm-256color', cwd, cols, rows, env: { ...env, TERM: 'xterm-256color', COLORTERM: 'truecolor' } });
+      pty = spawn(file, args, { name: 'xterm-256color', cwd, cols, rows, env: { ...env, [pathKey]: searchDirs(env).join(delimiter), TERM: 'xterm-256color', COLORTERM: 'truecolor' } });
     } catch (error) {
       send({ type: 'open-failed', id, reason: 'spawn-error', message: String(error) });
       return;
