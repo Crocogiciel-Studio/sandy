@@ -15,8 +15,7 @@ import { parseSbxVersionOutput } from './sbx-version';
 const AGENTS = ['claude', 'codex', 'copilot', 'cursor', 'devin', 'docker-agent', 'droid', 'gemini', 'kiro', 'opencode', 'shell'] as const;
 const SBX_TIMEOUT_MS = 60_000;
 // Kits applied when a Claude sandbox is created; sbx ignores --kit on an existing sandbox.
-// sbx/playwright is Docker's official mixin: headless Chromium, Playwright and their network policy.
-const CLAUDE_KITS = ['ghcr.io/crocogiciel/sbx-kit-aidd:latest', 'sbx/playwright'] as const;
+const CLAUDE_KITS = ['ghcr.io/crocogiciel/sbx-kit-aidd:latest'] as const;
 // Status bar kit installed by the user's setup script; skipped when absent so sbx does not fail on it.
 const STATUSLINE_KIT_DIR = join(homedir(), '.sbx-kits', 'claude-statusline');
 const localKits = (): string[] => (existsSync(STATUSLINE_KIT_DIR) ? [STATUSLINE_KIT_DIR] : []);
