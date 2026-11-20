@@ -1,0 +1,64 @@
+# syntax=docker/sandbox-kit:3
+# Chromium + Playwright for Claude sandboxes, installed with pnpm.
+#
+# Why not Docker's sbx/playwright: its install hook apt-installs Debian's
+# chromium packages, which do not exist on the Ubuntu 26.04 sandbox image, so
+# sandbox creation fails. This kit downloads Playwright's own Chromium build
+# into the overlay instead, and its recipe checks that it launches on the very
+# image the kit lands on.
+schemaVersion: "3"
+kind: mixin
+version: "1.0.0"
+displayName: Playwright (sandy)
+description: Playwright and headless Chromium for testing web apps from inside the sandbox, installed with pnpm.
+
+args:
+  version:
+    default: "1.65.1"
+    pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+    description: Playwright release to install
+    buildArg: PLAYWRIGHT_VERSION
+
+provides: ["playwright@${{ kit.args.version }}"]
+
+capabilities:
+  # pnpm and the Chromium download run in the recipe, on the builder. Only the
+  # system libraries need the sandbox's own apt, so the install phase allows the
+  # apt hosts (`apt-get update` refreshes every configured source, so all of
+  # them must be reachable). Runtime hosts are only for a project that pins
+  # another Playwright release and fetches its matching browser
+  # (`playwright install chromium`). localhost servers need no entry, and sites
+  # under test need their own grant.
+  - type: com.docker.sandbox/network-policy@1
+    config:
+      install:
+        allow:
+          - archive.ubuntu.com
+          - security.ubuntu.com
+          - ports.ubuntu.com
+          - download.docker.com
+          - cli.github.com
+      runtime:
+        allow:
+          - cdn.playwright.dev
+          - playwright.download.prss.microsoft.com
+          - storage.googleapis.com
+
+  # apt packages cannot travel in an overlay, so the libraries are installed here,
+  # from the list the overlay ships. HTTP(S)_PROXY: apt reaches its hosts through
+  # the sandbox proxy, and hook environments are deny-by-default.
+  - type: com.docker.sandbox/lifecycle@1
+    config:
+      install:
+        - command: |
+            set -e
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive xargs -a /opt/playwright/system-libs.txt apt-get install -y --no-install-recommends
+            rm -rf /var/lib/apt/lists/*
+          user: "0"
+          env: [HTTP_PROXY, HTTPS_PROXY]
+          description: Install Chromium's system libraries
+
+  - type: com.docker.sandbox/agent-context@1
+    config:
+      contentFile: ./playwright-context.md
