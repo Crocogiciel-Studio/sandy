@@ -41,6 +41,11 @@ describe('SbxSandboxProvider', () => {
     expect(args[9]).toBe('--');
   });
 
+  it('applies the Playwright kit to Claude by default', () => {
+    const { args } = provider.sessionCommand({ agent: 'claude', projectPath: '/p', name: 'n' });
+    expect(args.slice(args.indexOf('--kit'), args.indexOf('--'))).toContain('sbx/playwright');
+  });
+
   it('applies no kit to other agents', () => {
     const kitted = new SbxSandboxProvider(async () => '', ['kit-a']);
     expect(kitted.sessionCommand({ agent: 'codex', projectPath: '/p', name: 'n' }).args).not.toContain('--kit');
