@@ -42,6 +42,8 @@ export class SbxSandboxProvider implements SandboxProvider {
   constructor(
     private readonly run: RunSbx = runSbx,
     private readonly claudeKits: readonly string[] = [...CLAUDE_KITS, ...localKits()],
+    // Kit directories shipped with the app (resolved by the shell); sbx builds them on creation.
+    private readonly bundledKits: readonly string[] = [],
   ) {}
 
   listAgents(): readonly string[] {
@@ -61,7 +63,7 @@ export class SbxSandboxProvider implements SandboxProvider {
   }
 
   sessionCommand({ agent, projectPath, name }: { agent: string; projectPath: string; name: string }): SessionCommand {
-    const kits = agent === 'claude' ? this.claudeKits.flatMap((kit) => ['--kit', kit]) : [];
+    const kits = agent === 'claude' ? [...this.claudeKits, ...this.bundledKits].flatMap((kit) => ['--kit', kit]) : [];
     // Kits go before agentArgs: its leading `--` hands everything after it to the agent.
     return { command: 'sbx', args: ['run', agent, projectPath, '--name', name, ...kits, ...agentArgs(agent)] };
   }

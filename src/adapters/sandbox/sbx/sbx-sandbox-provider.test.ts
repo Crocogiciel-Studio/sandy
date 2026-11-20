@@ -41,6 +41,13 @@ describe('SbxSandboxProvider', () => {
     expect(args[9]).toBe('--');
   });
 
+  it('applies the bundled kits after the Claude kits', () => {
+    const kitted = new SbxSandboxProvider(async () => '', ['kit-a'], ['/app/kits/playwright']);
+    const { args } = kitted.sessionCommand({ agent: 'claude', projectPath: '/p', name: 'n' });
+    expect(args.slice(5, 9)).toEqual(['--kit', 'kit-a', '--kit', '/app/kits/playwright']);
+    expect(kitted.sessionCommand({ agent: 'codex', projectPath: '/p', name: 'n' }).args).not.toContain('--kit');
+  });
+
   it('applies no kit to other agents', () => {
     const kitted = new SbxSandboxProvider(async () => '', ['kit-a']);
     expect(kitted.sessionCommand({ agent: 'codex', projectPath: '/p', name: 'n' }).args).not.toContain('--kit');

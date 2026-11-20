@@ -79,7 +79,9 @@ async function start(): Promise<void> {
   if (host === 'foreign' && !(await replaceForeignHost(terminal))) return app.quit();
   if (host === 'compatible') await terminal.list();
   registerTerminalIpc(terminal);
-  const sandbox = new SbxSandboxProvider();
+  // Kits shipped with the app (electron-builder `extraResources`); sbx builds them from source on sandbox creation.
+  const bundledKit = (name: string): string => join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'kits', name);
+  const sandbox = new SbxSandboxProvider(undefined, undefined, [bundledKit('playwright')]);
   registerSbxIpc({ sandbox, terminal });
   registerSessionIpc({ sandbox, terminal });
   registerNotificationIpc(showWindow);
